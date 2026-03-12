@@ -3,7 +3,7 @@ import TopAnnouncementBar from "./TopAnnouncementBar";
 import HeaderBar from "./HeaderBar";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
-import "@/components/styles/mainLayout.css";
+import "@/components/styles/MainLayout.css";
 import "@/styles/global.css";
 import "@/styles/theme.css";
 
