@@ -1,0 +1,186 @@
+/* ===============================
+   OVERLAY
+=============================== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 20, 20, 0.85);
+  backdrop-filter: blur(6px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 5000;
+}
+
+/* ===============================
+   LUXURY CARD
+=============================== */
+.login-modal {
+  width: 480px;
+  max-width: 92%;
+  background: #f8f6f1;
+  border-radius: 24px;
+  padding: 60px 50px;
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, 0.4),
+    0 0 0 1px #e8e2d6 inset;
+  animation: modalFade 0.35s ease;
+}
+
+@keyframes modalFade {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ===============================
+   FORM
+=============================== */
+.login-left {
+  width: 100%;
+}
+
+.login-left h2 {
+  font-size: 28px;
+  margin-bottom: 35px;
+  color: #1c1c1c;
+  letter-spacing: 0.5px;
+}
+
+/* ===============================
+   INPUTS
+=============================== */
+.login-left input {
+  width: 100%;
+  padding: 16px;
+  margin-bottom: 18px;
+  border-radius: 10px;
+  border: 1px solid #e8e2d6;
+  background: #ffffff;
+  font-size: 15px;
+  transition: all 0.25s ease;
+}
+
+.login-left input:focus {
+  outline: none;
+  border-color: #c6a85b;
+  box-shadow: 0 0 0 3px rgba(198, 168, 91, 0.15);
+}
+
+/* ===============================
+   BUTTON
+=============================== */
+.login-btn {
+  width: 100%;
+  padding: 16px;
+  margin-top: 10px;
+  border-radius: 10px;
+  border: none;
+  background: #1c1c1c;
+  color: #fff;
+  font-size: 15px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.login-btn:hover {
+  background: #c6a85b;
+  color: #1c1c1c;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(198, 168, 91, 0.3);
+}
+
+/* ===============================
+   LINKS
+=============================== */
+.switch-text,
+.back-text {
+  margin-top: 22px;
+  font-size: 14px;
+  text-align: center;
+  color: #6f6a60;
+  cursor: pointer;
+}
+
+.switch-text span {
+  color: #c6a85b;
+  font-weight: 600;
+}
+
+/* ===============================
+   ERROR
+=============================== */
+.error-text {
+  font-size: 13px;
+  margin-bottom: 10px;
+  color: #c0392b;
+  opacity: 0;
+  transform: translateY(-4px);
+  animation: errorFade 0.25s ease forwards;
+}
+
+@keyframes errorFade {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===============================
+   SHAKE
+=============================== */
+.shake-form {
+  animation: formShake 0.35s ease-in-out;
+}
+
+@keyframes formShake {
+  0% { transform: translateX(-6px); }
+  50% { transform: translateX(6px); }
+  100% { transform: translateX(0); }
+}
+
+/* ===============================
+   PASSWORD STRENGTH
+=============================== */
+.strength-wrapper {
+  height: 6px;
+  background: #ece7dc;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.strength-bar {
+  height: 100%;
+  width: 0%;
+  transition: width 0.4s ease, background 0.3s ease;
+}
+
+.strength-1 { width: 20%; background: #d9534f; }
+.strength-2 { width: 40%; background: #f0ad4e; }
+.strength-3 { width: 60%; background: #f7e463; }
+.strength-4 { width: 80%; background: #7fb069; }
+.strength-5 { width: 100%; background: #2e7d32; }
+
+/* ===============================
+   LOADER
+=============================== */
+.btn-loader {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

@@ -1,0 +1,81 @@
+.skeleton-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+/* Premium shimmer */
+.shimmer {
+  position: relative;
+  background: #f5f5f5;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.shimmer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -150%;
+  height: 100%;
+  width: 150%;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.6) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  100% {
+    left: 150%;
+  }
+}
+
+/* Skeleton blocks */
+
+.skeleton-image {
+  height: 220px;
+  margin-bottom: 18px;
+}
+
+.skeleton-title {
+  height: 22px;
+  width: 65%;
+  margin-bottom: 12px;
+}
+
+.skeleton-text {
+  height: 14px;
+  width: 90%;
+  margin-bottom: 10px;
+}
+
+.skeleton-price {
+  height: 20px;
+  width: 45%;
+  margin-bottom: 18px;
+}
+
+.skeleton-button {
+  height: 40px;
+  width: 100%;
+  border-radius: 10px;
+}
+
+.skeleton-content {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Responsive polish */
+
+@media (max-width: 768px) {
+  .skeleton-image {
+    height: 180px;
+  }
+}

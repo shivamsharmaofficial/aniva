@@ -1,0 +1,30 @@
+/* ================= PAYMENT MODE ================= */
+
+.payment-mode-card {
+  margin-top: 40px;
+  background: #fff;
+  padding: 30px;
+  border-radius: 18px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
+}
+
+.payment-mode-card h2 {
+  margin-bottom: 15px;
+}
+
+.payment-mode-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 15px;
+}
+
+.active-mode {
+  border-color: #c8a23e;
+  color: #c8a23e;
+}
+
+.payment-mode-note {
+  margin-top: 15px;
+  font-size: 13px;
+  color: #777;
+}

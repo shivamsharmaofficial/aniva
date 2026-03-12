@@ -1,0 +1,122 @@
+.announcement-bar {
+  background: #000;
+  color: #fff;
+}
+
+.announcement-bar__inner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.5rem;
+  max-width: 1920px;
+  margin: 0 auto;
+  padding: 0 0.75rem;
+}
+
+.announcement-bar__arrow {
+  position: absolute;
+  top: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 999px;
+  color: #fff;
+  transform: translateY(-50%);
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.announcement-bar__arrow:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #d4af37;
+}
+
+.announcement-bar__arrow--left {
+  left: 0.75rem;
+}
+
+.announcement-bar__arrow--right {
+  right: 0.75rem;
+}
+
+.announcement-bar__track {
+  position: relative;
+  width: 100%;
+  max-width: 980px;
+  overflow: hidden;
+  padding: 0 2.5rem;
+}
+
+.announcement-bar__message,
+.announcement-bar__message--outgoing {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  text-align: center;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+}
+
+.announcement-bar__message {
+  position: relative;
+  height: 1.5rem;
+}
+
+.announcement-bar__message--outgoing {
+  position: absolute;
+  inset: 0;
+}
+
+@media (min-width: 640px) {
+  .announcement-bar__inner {
+    padding: 0 1rem;
+  }
+
+  .announcement-bar__arrow--left {
+    left: 1rem;
+  }
+
+  .announcement-bar__arrow--right {
+    right: 1rem;
+  }
+
+  .announcement-bar__track {
+    padding: 0 3rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .announcement-bar__inner {
+    padding: 0 1.5rem;
+  }
+
+  .announcement-bar__arrow--left {
+    left: 2rem;
+  }
+
+  .announcement-bar__arrow--right {
+    right: 2rem;
+  }
+
+  .announcement-bar__track {
+    padding: 0 3.5rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .announcement-bar__arrow--left {
+    left: 200px;
+  }
+
+  .announcement-bar__arrow--right {
+    right: 200px;
+  }
+}

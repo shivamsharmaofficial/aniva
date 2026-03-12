@@ -1,0 +1,35 @@
+.btn {
+  border-radius: 30px;
+  padding: 10px 22px;
+  font-size: 14px;
+  transition: var(--transition-normal);
+}
+
+.btn-primary {
+  background: var(--color-black);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--color-gold);
+  color: black;
+}
+
+.btn-outline {
+  border: 1px solid var(--color-gold);
+  color: var(--color-gold);
+  background: transparent;
+}
+
+.btn-outline:hover {
+  background: var(--color-gold);
+  color: black;
+}
+
+.btn-sm {
+  padding: 6px 14px;
+}
+
+.btn-lg {
+  padding: 14px 28px;
+}

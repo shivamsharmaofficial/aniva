@@ -1,0 +1,13 @@
+# Backend
+aniva-api/target/
+aniva-api/.mvn/
+
+# Frontend
+aniva-frontend/node_modules/
+aniva-frontend/dist/
+
+# Environment
+.env
+
+# OS
+.DS_Store

@@ -1,0 +1,188 @@
+/* ========================================
+   ADMIN PAGE CONTAINER
+======================================== */
+
+.admin-container {
+  max-width: 1100px;
+  margin: 120px auto 60px;
+  padding: 0 20px;
+}
+
+.admin-container h1 {
+  font-family: "Playfair Display", serif;
+  font-size: 30px;
+  margin-bottom: 35px;
+  color: #1e1e1e;
+}
+
+/* ========================================
+   CARD SECTIONS
+======================================== */
+
+.card {
+  background: #ffffff;
+  padding: 28px;
+  border-radius: 18px;
+  border: 1px solid #ebe6dc;
+  box-shadow:
+    0 20px 40px rgba(0,0,0,0.04),
+    0 0 0 1px #f3efe6 inset;
+
+  margin-bottom: 25px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+
+  transition: 0.25s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 25px 50px rgba(0,0,0,0.06),
+    0 0 0 1px #e6dfcf inset;
+}
+
+.card h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e1e1e;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+/* ========================================
+   INPUT FIELDS
+======================================== */
+
+.card input,
+.card textarea,
+.card select {
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #e4dfd5;
+  font-size: 14px;
+  background: #faf7f2;
+  transition: all 0.25s ease;
+}
+
+.card textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.card input:focus,
+.card textarea:focus,
+.card select:focus {
+  outline: none;
+  border-color: #c6a85b;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(198,168,91,0.15);
+}
+
+/* ========================================
+   ROW LAYOUT
+======================================== */
+
+.row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.row input,
+.row select {
+  flex: 1;
+}
+
+/* ========================================
+   VARIANT BLOCK
+======================================== */
+
+.variant-block {
+  border: 1px solid #ece6db;
+  background: #faf7f2;
+  padding: 16px;
+  border-radius: 12px;
+
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+
+  transition: 0.25s ease;
+}
+
+.variant-block:hover {
+  border-color: #c6a85b;
+}
+
+/* ========================================
+   ERROR STYLING
+======================================== */
+
+.input-error {
+  border: 1px solid #d32f2f !important;
+  background: #fff5f5;
+}
+
+.error-text {
+  color: #d32f2f;
+  font-size: 13px;
+  margin-top: -5px;
+}
+
+/* ========================================
+   LOW STOCK WARNING
+======================================== */
+
+.low-stock {
+  color: #c62828;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ========================================
+   SUBMIT BUTTON
+======================================== */
+
+button[type="submit"] {
+  margin-top: 20px;
+  padding: 15px 20px;
+  border-radius: 12px;
+  border: none;
+
+  background: #1e1e1e;
+  color: #ffffff;
+
+  font-weight: 600;
+  letter-spacing: 1px;
+  cursor: pointer;
+
+  transition: all 0.25s ease;
+}
+
+button[type="submit"]:hover {
+  background: #c6a85b;
+  color: #1e1e1e;
+  transform: translateY(-2px);
+}
+
+/* ========================================
+   RESPONSIVE
+======================================== */
+
+@media (max-width: 768px) {
+
+  .admin-container {
+    margin-top: 100px;
+  }
+
+  .row {
+    flex-direction: column;
+  }
+
+  .variant-block {
+    flex-direction: column;
+  }
+
+}

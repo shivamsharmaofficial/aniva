@@ -1,0 +1,19 @@
+import { useMutation } from "@tanstack/react-query";
+import { registerUser } from "@/features/auth/api/authApi";
+import { setSession } from "../utils/authService";
+
+export function useUserRegister() {
+  return useMutation({
+    mutationFn: registerUser,
+    onSuccess: (response) => {
+      const accessToken = response.data?.accessToken;
+      const refreshToken = response.data?.refreshToken;
+
+      if (!accessToken || !refreshToken) {
+        throw new Error("Invalid auth response");
+      }
+
+      setSession(accessToken, refreshToken);
+    },
+  });
+}

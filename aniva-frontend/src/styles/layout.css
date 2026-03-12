@@ -1,0 +1,159 @@
+/* ========================= */
+/* NAVBAR */
+/* ========================= */
+/* NAV CONTAINER GRID LAYOUT */
+
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: #111;
+  color: white;
+  width: 100%;
+}
+
+/* RIGHT */
+.nav-right {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 20px;
+}
+
+
+/* LOGO */
+
+.logo a {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #d4af37;
+  text-decoration: none;
+}
+
+/* MENU */
+
+.nav-menu {
+  list-style: none;
+  display: flex;
+  gap: 30px;
+}
+
+.nav-menu li a {
+  color: white;
+  text-decoration: none;
+  font-size: 15px;
+  position: relative;
+  transition: 0.3s ease;
+}
+
+.nav-menu li a:hover {
+  color: #d4af37;
+}
+
+.nav-menu a.active {
+  color: #d4af37;
+}
+
+/* RIGHT SIDE */
+
+.nav-icons {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.icon {
+  font-size: 20px;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.icon:hover {
+  color: #d4af37;
+}
+
+/* CART BADGE */
+
+.cart-wrapper {
+  position: relative;
+}
+
+.cart-badge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  background: #d4af37;
+  color: black;
+  font-size: 11px;
+  padding: 3px 6px;
+  border-radius: 50%;
+  font-weight: 600;
+}
+
+/* LOGOUT BUTTON */
+
+.logout-btn {
+  background: transparent;
+  border: 1px solid #d4af37;
+  color: #d4af37;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.logout-btn:hover {
+  background: #d4af37;
+  color: black;
+}
+
+/* MOBILE MENU */
+
+.menu-toggle {
+  display: none;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+/* ========================= */
+/* FOOTER */
+/* ========================= */
+
+.footer {
+  background: #111;
+  color: #aaa;
+  padding: 30px 20px;
+  text-align: center;
+  font-size: 14px;
+}
+
+/* ========================= */
+/* RESPONSIVE */
+/* ========================= */
+
+@media (max-width: 900px) {
+  .nav-container {
+    padding: 16px 20px;
+  }
+
+  .menu-toggle {
+    display: block;
+  }
+
+  .nav-menu {
+    position: absolute;
+    top: 70px;
+    left: 0;
+    width: 100%;
+    background: #111;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 25px 0;
+    display: none;
+  }
+
+  .nav-menu.active {
+    display: flex;
+  }
+}

@@ -1,0 +1,145 @@
+@import "tailwindcss";
+@import "./theme.css";
+
+/* RESET */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-primary);
+  background: var(--color-beige);
+  color: var(--color-text);
+  min-height: 100vh;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  border: none;
+  cursor: pointer;
+  font: inherit;
+}
+
+img {
+  width: 100%;
+  display: block;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+@keyframes announcement-slide-in-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes announcement-slide-in-left {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes announcement-slide-out-left {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+}
+
+@keyframes announcement-slide-out-right {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+.announcement-enter-right {
+  animation: announcement-slide-in-right 0.45s ease forwards;
+}
+
+.announcement-enter-left {
+  animation: announcement-slide-in-left 0.45s ease forwards;
+}
+
+.announcement-exit-left {
+  animation: announcement-slide-out-left 0.45s ease forwards;
+}
+
+.announcement-exit-right {
+  animation: announcement-slide-out-right 0.45s ease forwards;
+}
+
+@keyframes auth-drawer-slide-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.auth-drawer-slide-in {
+  animation: auth-drawer-slide-in 0.45s ease forwards;
+}
+
+@keyframes auth-view-slide-left {
+  from {
+    opacity: 0;
+    transform: translateX(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes auth-view-slide-right {
+  from {
+    opacity: 0;
+    transform: translateX(-18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.auth-view-shell {
+  will-change: transform, opacity;
+}
+
+.auth-view-enter-left {
+  animation: auth-view-slide-left 0.28s ease forwards;
+}
+
+.auth-view-enter-right,
+.auth-view-enter {
+  animation: auth-view-slide-right 0.28s ease forwards;
+}

@@ -1,0 +1,399 @@
+/* ================= PRODUCT DETAILS PAGE ================= */
+
+.product-details {
+  margin-top: 120px;
+  padding: 60px 20px;
+  max-width: 1300px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ================= BREADCRUMB ================= */
+
+.breadcrumb {
+  margin-bottom: 35px;
+  font-size: 14px;
+  color: #777;
+}
+
+.breadcrumb a {
+  text-decoration: none;
+  color: #111;
+  font-weight: 500;
+}
+
+.breadcrumb a:hover {
+  color: #d4af37;
+}
+
+/* ================= GRID ================= */
+
+.product-details-grid {
+  display: grid;
+  grid-template-columns: 520px 1fr;
+  gap: 70px;
+  align-items: start;
+}
+
+/* ================= IMAGE SECTION ================= */
+
+.product-image-section {
+  width: 100%;
+  max-width: 520px;
+}
+
+/* IMAGE WRAPPER */
+
+.image-wrapper {
+  width: 100%;
+  height: 420px;
+  overflow: hidden;
+  border-radius: 18px;
+  background: #f7f7f7;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* MAIN IMAGE */
+
+.main-product-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+
+  transition: transform 0.5s ease;
+  cursor: zoom-in;
+}
+
+.main-product-image:hover {
+  transform: scale(1.05);
+}
+
+/* ================= THUMBNAILS ================= */
+
+.thumbnail-container {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.thumbnail {
+  width: 70px;
+  height: 70px;
+  object-fit: cover;
+  border-radius: 10px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: 0.2s;
+}
+
+.thumbnail:hover {
+  border-color: #d4af37;
+  transform: scale(1.05);
+}
+
+.thumbnail.active {
+  border-color: #d4af37;
+}
+
+/* ================= LIGHTBOX ================= */
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.9);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  z-index: 9999;
+}
+
+.lightbox img {
+  max-width: 90%;
+  max-height: 90%;
+  border-radius: 12px;
+}
+
+/* ================= PRODUCT INFO ================= */
+
+.product-info-section {
+  position: sticky;
+  top: 120px;
+}
+
+.product-info-section h2 {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+/* ================= PRICE ================= */
+
+.price {
+  font-size: 26px;
+  font-weight: 700;
+  color: #d4af37;
+  margin-bottom: 15px;
+}
+
+/* ================= STOCK ================= */
+
+.stock {
+  font-size: 14px;
+  margin-bottom: 18px;
+  font-weight: 600;
+}
+
+.stock.in {
+  color: #28a745;
+}
+
+.stock.out {
+  color: #dc3545;
+}
+
+/* ================= WISHLIST ================= */
+
+.wishlist-btn {
+  margin-bottom: 18px;
+  padding: 8px 14px;
+
+  border: 1px solid #ddd;
+  background: white;
+
+  cursor: pointer;
+  border-radius: 8px;
+
+  transition: 0.3s ease;
+}
+
+.wishlist-btn:hover {
+  border-color: #d4af37;
+}
+
+.wishlist-btn.active {
+  color: red;
+  border-color: red;
+}
+
+/* ================= VARIANT SELECT ================= */
+
+select {
+  width: 100%;
+  max-width: 320px;
+  padding: 12px;
+
+  border-radius: 8px;
+  border: 1px solid #ddd;
+
+  margin-bottom: 20px;
+
+  font-size: 14px;
+}
+
+/* ================= QUANTITY ================= */
+
+.quantity-selector {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 25px;
+}
+
+.quantity-selector button {
+  width: 38px;
+  height: 38px;
+
+  border: 1px solid #ddd;
+  background: white;
+
+  cursor: pointer;
+  font-size: 18px;
+
+  border-radius: 6px;
+  transition: 0.25s;
+}
+
+.quantity-selector button:hover {
+  background: #111;
+  color: white;
+}
+
+.quantity-selector span {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+/* ================= ACTION BUTTONS ================= */
+
+.actions {
+  display: flex;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.actions button {
+  padding: 14px 28px;
+
+  border: none;
+  cursor: pointer;
+
+  font-weight: 600;
+  border-radius: 8px;
+
+  transition: 0.3s ease;
+}
+
+/* ADD TO CART */
+
+.actions button:first-child {
+  background: #111;
+  color: white;
+}
+
+.actions button:first-child:hover {
+  background: #d4af37;
+  color: #111;
+}
+
+/* BUY NOW */
+
+.actions button:last-child {
+  background: #d4af37;
+  color: #111;
+}
+
+.actions button:last-child:hover {
+  background: #111;
+  color: white;
+}
+
+/* ================= PRODUCT TABS ================= */
+
+.product-tabs {
+  margin-top: 90px;
+}
+
+.tab-buttons {
+  display: flex;
+  gap: 35px;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 35px;
+}
+
+.tab-buttons button {
+  background: none;
+  border: none;
+
+  font-size: 16px;
+  padding-bottom: 12px;
+
+  cursor: pointer;
+  position: relative;
+
+  font-weight: 500;
+  color: #444;
+}
+
+.tab-buttons button:hover {
+  color: #d4af37;
+}
+
+.tab-buttons button.active {
+  color: #d4af37;
+}
+
+.tab-buttons button.active::after {
+  content: "";
+  position: absolute;
+
+  bottom: -1px;
+  left: 0;
+
+  width: 100%;
+  height: 2px;
+
+  background: #d4af37;
+}
+
+.tab-content {
+  max-width: 900px;
+  line-height: 1.8;
+  color: #555;
+}
+
+/* ================= REVIEWS ================= */
+
+.review-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 30px;
+}
+
+.review-form textarea {
+  padding: 12px;
+
+  border-radius: 8px;
+  border: 1px solid #ddd;
+
+  min-height: 80px;
+}
+
+.review-form button {
+  width: 160px;
+  padding: 10px;
+
+  border: none;
+  background: #111;
+  color: white;
+
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.review-form button:hover {
+  background: #d4af37;
+  color: #111;
+}
+
+.review-item {
+  border-bottom: 1px solid #eee;
+  padding: 15px 0;
+}
+
+/* ================= RESPONSIVE ================= */
+
+@media (max-width: 1024px) {
+
+  .product-details-grid {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .product-info-section {
+    position: static;
+  }
+
+  .image-wrapper {
+    height: 350px;
+  }
+
+}
+
+@media (max-width: 600px) {
+
+  .thumbnail {
+    width: 60px;
+    height: 60px;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+
+}

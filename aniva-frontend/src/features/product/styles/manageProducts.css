@@ -1,0 +1,293 @@
+/* ========================================
+   PAGE LAYOUT
+======================================== */
+
+.manage-products {
+  max-width: 1200px;
+  margin: 120px auto 60px;
+  padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+/* ========================================
+   HEADER
+======================================== */
+
+.manage-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.manage-header h1 {
+  font-family: "Playfair Display", serif;
+  font-size: 30px;
+  color: #1e1e1e;
+}
+
+/* CREATE BUTTON */
+
+.create-btn {
+  padding: 10px 18px;
+  background: #111;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.25s ease;
+}
+
+.create-btn:hover {
+  background: #c6a85b;
+  color: #111;
+  transform: translateY(-1px);
+}
+
+/* ========================================
+   TOOLBAR
+======================================== */
+
+.manage-toolbar {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.manage-toolbar input,
+.manage-toolbar select {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #e4dfd5;
+  font-size: 14px;
+  background: #faf7f2;
+  transition: 0.2s;
+}
+
+.manage-toolbar input:focus,
+.manage-toolbar select:focus {
+  outline: none;
+  border-color: #c6a85b;
+  background: #fff;
+}
+
+.manage-toolbar button {
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background: white;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.manage-toolbar button:hover {
+  background: #c6a85b;
+  color: #111;
+  border-color: #c6a85b;
+}
+
+/* ========================================
+   TABLE WRAPPER
+======================================== */
+
+.table-wrapper {
+  background: #ffffff;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid #ebe6dc;
+
+  box-shadow:
+    0 20px 40px rgba(0,0,0,0.05),
+    0 0 0 1px #f3efe6 inset;
+}
+
+/* ========================================
+   TABLE
+======================================== */
+
+.product-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.product-table thead {
+  background: #faf7f2;
+}
+
+.product-table th,
+.product-table td {
+  padding: 18px 20px;
+  text-align: left;
+}
+
+.product-table th {
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #8a857b;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+
+.product-table tbody tr {
+  border-top: 1px solid #f0ede7;
+  transition: 0.2s;
+}
+
+.product-table tbody tr:hover {
+  background: #faf7f2;
+}
+
+/* ========================================
+   STATUS BADGES
+======================================== */
+
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-badge.active {
+  background: #e6f4ea;
+  color: #2e7d32;
+}
+
+.status-badge.inactive {
+  background: #fdecea;
+  color: #d32f2f;
+}
+
+.status-badge.archived {
+  background: #eeeeee;
+  color: #666;
+}
+
+/* ========================================
+   LOW STOCK WARNING
+======================================== */
+
+.low-stock {
+  font-weight: 600;
+  color: #ff6f00;
+}
+
+.flash {
+  animation: flashRed 1s infinite;
+}
+
+@keyframes flashRed {
+  0% { color: #d32f2f; }
+  50% { color: #ff9a9a; }
+  100% { color: #d32f2f; }
+}
+
+/* ========================================
+   ACTION BUTTONS
+======================================== */
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.actions button {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  transition: 0.2s;
+}
+
+/* EDIT */
+
+.edit-btn {
+  background: #111;
+  color: white;
+}
+
+.edit-btn:hover {
+  background: #c6a85b;
+  color: #111;
+}
+
+/* DELETE */
+
+.delete-btn {
+  background: #d32f2f;
+  color: white;
+}
+
+.delete-btn:hover {
+  background: #b71c1c;
+}
+
+/* DEFAULT BUTTONS */
+
+.actions button:not(.edit-btn):not(.delete-btn) {
+  background: #f5f5f5;
+}
+
+.actions button:not(.edit-btn):not(.delete-btn):hover {
+  background: #e0e0e0;
+}
+
+/* ========================================
+   PAGINATION
+======================================== */
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.pagination button {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  background: #111;
+  color: white;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.pagination button:hover {
+  background: #c6a85b;
+  color: #111;
+}
+
+.pagination button:disabled {
+  background: #ccc;
+}
+
+/* ========================================
+   LOADING STATE
+======================================== */
+
+.loading-state {
+  padding: 40px;
+  text-align: center;
+  color: #777;
+}
+
+/* ========================================
+   RESPONSIVE
+======================================== */
+
+@media (max-width: 900px) {
+
+  .product-table th,
+  .product-table td {
+    padding: 12px 10px;
+  }
+
+  .manage-toolbar {
+    flex-direction: column;
+  }
+
+}
