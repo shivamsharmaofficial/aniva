@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://HOST:5432/aniva
+    url: jdbc:postgresql://dpg-d6p8schr0fns73e6s4vg-a:5432/aniva
     username: aniva_user
     password: 6oF7UNhEMJbECJtHQpMBIp7nkfheVZVS
 
