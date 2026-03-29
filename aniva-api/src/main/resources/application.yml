@@ -4,9 +4,10 @@ spring:
 
   data:
     redis:
-      host: promoted-dassie-87875.upstash.io
-      port: 6379
-      password: gQAAAAAAAVdDAAIncDJmZDU5NWY3N2VjMWM0Zjg1OTQ2OTI1MzIyMTZkNjA3ZHAyODc4NzU
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD}
+      ssl: true
       timeout: 2s
       lettuce:
         pool:
@@ -15,9 +16,9 @@ spring:
           min-idle: 5
 
   datasource:
-    url: jdbc:postgresql://dpg-d6p8schr0fns73e6s4vg-a:5432/aniva
-    username: aniva_user
-    password: 6oF7UNhEMJbECJtHQpMBIp7nkfheVZVS
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     hikari:
       connection-timeout: 20000
       maximum-pool-size: 30
@@ -28,8 +29,8 @@ spring:
   jpa:
     open-in-view: false
     hibernate:
-      ddl-auto: update
-    show-sql: false   # 🔥 IMPORTANT (disable in production)
+      ddl-auto: update   # ⚠️ change to 'validate' later in strict prod
+    show-sql: false
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     properties:
       hibernate:
@@ -37,10 +38,10 @@ spring:
         default_batch_fetch_size: 50
 
   mail:
-    host: smtp.gmail.com
-    port: 587
-    username: your_email@gmail.com
-    password: your_app_password
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
     properties:
       mail:
         smtp:
@@ -55,13 +56,14 @@ logging:
     org.hibernate.orm.jdbc.bind: WARN
 
 razorpay:
-  key: rzp_test_SPhMB2Wms3hqQO
-  secret: F27qayH0bMvj2VWNWdF0erK
+  key: ${RAZORPAY_KEY}
+  secret: ${RAZORPAY_SECRET}
 
 jwt:
-  secret: 9f8a7b6c5d4e3f2a1b9c8d7e6f5a4b3c
-  expiration: 86400000
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION:86400000}
 
 server:
+  port: ${PORT:8080}
   tomcat:
     connection-timeout: 20s
