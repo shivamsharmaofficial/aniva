@@ -19,6 +19,8 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.aniva.core.security.JwtAuthenticationFilter;
+import com.aniva.core.security.LoggingFilter;
+import com.aniva.core.security.RateLimitingFilter;
 
 import java.util.List;
 
@@ -28,6 +30,8 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final LoggingFilter loggingFilter;
+    private final RateLimitingFilter rateLimitingFilter;
 
     /*
      ===============================
@@ -70,7 +74,8 @@ public class SecurityConfig {
                             "/api/products/**",
                             "/api/categories/**",
                             "/api/payments/mode",
-                            "/api/cart/**"
+                            "/api/cart/**",
+                            "/api/webhook/razorpay"
                     ).permitAll()
 
                     // Admin APIs
@@ -85,6 +90,14 @@ public class SecurityConfig {
             .httpBasic(httpBasic -> httpBasic.disable())
 
             // Add JWT filter
+            .addFilterBefore(
+                    loggingFilter,
+                    RateLimitingFilter.class
+            )
+            .addFilterBefore(
+                    rateLimitingFilter,
+                    JwtAuthenticationFilter.class
+            )
             .addFilterBefore(
                     jwtAuthenticationFilter,
                     UsernamePasswordAuthenticationFilter.class

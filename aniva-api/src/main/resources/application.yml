@@ -1,17 +1,39 @@
 spring:
+  cache:
+    type: redis
+
+  data:
+    redis:
+      host: promoted-dassie-87875.upstash.io
+      port: 6379
+      password: gQAAAAAAAVdDAAIncDJmZDU5NWY3N2VjMWM0Zjg1OTQ2OTI1MzIyMTZkNjA3ZHAyODc4NzU
+      timeout: 2s
+      lettuce:
+        pool:
+          max-active: 20
+          max-idle: 10
+          min-idle: 5
+
   datasource:
     url: jdbc:postgresql://dpg-d6p8schr0fns73e6s4vg-a:5432/aniva
     username: aniva_user
     password: 6oF7UNhEMJbECJtHQpMBIp7nkfheVZVS
+    hikari:
+      connection-timeout: 20000
+      maximum-pool-size: 30
+      minimum-idle: 10
+      idle-timeout: 30000
+      max-lifetime: 1800000
 
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false   # 🔥 IMPORTANT (disable in production)
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
         default_batch_fetch_size: 50
 
   mail:
@@ -25,11 +47,21 @@ spring:
           auth: true
           starttls:
             enable: true
+
 logging:
   level:
-    org.hibernate.SQL: DEBUG
-    org.hibernate.orm.jdbc.bind: TRACE
+    root: INFO
+    org.hibernate.SQL: WARN
+    org.hibernate.orm.jdbc.bind: WARN
+
+razorpay:
+  key: rzp_test_SPhMB2Wms3hqQO
+  secret: F27qayH0bMvj2VWNWdF0erK
 
 jwt:
-  secret: aniva-super-secret-key-for-jwt-authentication
+  secret: 9f8a7b6c5d4e3f2a1b9c8d7e6f5a4b3c
   expiration: 86400000
+
+server:
+  tomcat:
+    connection-timeout: 20s

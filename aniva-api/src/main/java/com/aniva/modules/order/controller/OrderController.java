@@ -5,8 +5,7 @@ import com.aniva.core.security.CustomUserDetails;
 import com.aniva.modules.order.dto.CheckoutRequest;
 import com.aniva.modules.order.dto.OrderItemResponse;
 import com.aniva.modules.order.dto.OrderResponse;
-import com.aniva.modules.order.entity.OrderItem;
-import com.aniva.modules.order.entity.UserOrder;
+import com.aniva.modules.order.dto.OrderStatusResponse;
 import com.aniva.modules.order.service.OrderService;
 
 import lombok.RequiredArgsConstructor;
@@ -37,13 +36,9 @@ public class OrderController {
             @RequestBody(required = false) CheckoutRequest request
     ) {
 
-        UserOrder order = orderService.checkout(userDetails.getUserId());
-
-        OrderResponse response = orderService.toResponse(order);
-
         return ApiResponse.success(
                 "Order created successfully",
-                response
+                orderService.toResponse(orderService.checkout(userDetails.getUserId(), request))
         );
     }
 
@@ -76,17 +71,11 @@ public class OrderController {
             @PathVariable Long orderId
     ) {
 
-        UserOrder order = orderService.getOrderById(orderId);
-
-        if (!order.getUser().getId().equals(userDetails.getUserId())) {
-            throw new RuntimeException("Access denied");
-        }
-
-        OrderResponse response = orderService.toResponse(order);
+        OrderStatusResponse status = orderService.getOrderStatus(userDetails.getUserId(), orderId);
 
         return ApiResponse.success(
                 "Order fetched successfully",
-                response
+                orderService.toResponse(orderService.getOrderById(status.getOrderId()))
         );
     }
 
@@ -96,12 +85,13 @@ public class OrderController {
 
     @GetMapping("/{orderId}/items")
     public ApiResponse<List<OrderItemResponse>> getOrderItems(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long orderId
     ) {
 
-        List<OrderItem> items = orderService.getOrderItems(orderId);
+        orderService.getOrderStatus(userDetails.getUserId(), orderId);
 
-        List<OrderItemResponse> response = items.stream()
+        List<OrderItemResponse> response = orderService.getOrderItems(orderId).stream()
                 .map(item -> OrderItemResponse.builder()
                         .id(item.getId())
                         .productId(item.getProductId())
@@ -114,6 +104,18 @@ public class OrderController {
         return ApiResponse.success(
                 "Order items fetched",
                 response
+        );
+    }
+
+    @GetMapping("/{orderId}/status")
+    public ApiResponse<OrderStatusResponse> getOrderStatus(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long orderId
+    ) {
+
+        return ApiResponse.success(
+                "Order status fetched successfully",
+                orderService.getOrderStatus(userDetails.getUserId(), orderId)
         );
     }
 }

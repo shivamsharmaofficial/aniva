@@ -14,6 +14,7 @@ import jakarta.persistence.LockModeType;
 import java.util.Optional;
 
 import com.aniva.modules.product.entity.Product;
+import org.springframework.data.jpa.domain.Specification;
 
 public interface ProductRepository extends
         JpaRepository<Product, Long>,
@@ -21,10 +22,18 @@ public interface ProductRepository extends
 
     boolean existsBySlug(String slug);
 
+    @EntityGraph(attributePaths = {"images", "category"})
     Optional<Product> findBySlugAndIsDeletedFalse(String slug);
 
     @EntityGraph(attributePaths = {"images", "category"})
+    Optional<Product> findWithDetailsById(Long id);
+
+    @EntityGraph(attributePaths = {"images", "category"})
     Page<Product> findByIsDeletedFalseAndIsActiveTrue(Pageable pageable);
+
+    @Override
+    @EntityGraph(attributePaths = {"images", "category"})
+    Page<Product> findAll(Specification<Product> spec, Pageable pageable);
 
     /* ===============================
        LOCK PRODUCT ROW FOR CHECKOUT

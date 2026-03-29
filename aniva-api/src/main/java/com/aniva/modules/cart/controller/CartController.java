@@ -4,7 +4,7 @@ import com.aniva.core.response.ApiResponse;
 import com.aniva.core.security.CustomUserDetails;
 import com.aniva.modules.cart.dto.AddToCartRequest;
 import com.aniva.modules.cart.dto.CartItemResponse;
-import com.aniva.modules.cart.service.CartService;
+import com.aniva.modules.cart.service.RedisCartService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -20,7 +20,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CartController {
 
-    private final CartService cartService;
+    private final RedisCartService redisCartService;
 
     /* ================= GET CART ================= */
 
@@ -44,7 +44,7 @@ public class CartController {
 
         return ApiResponse.success(
                 "Cart fetched successfully",
-                cartService.getCart(userDetails.getUserId())
+                redisCartService.getCart(userDetails.getUserId())
         );
     }
 
@@ -68,7 +68,11 @@ public class CartController {
             throw new RuntimeException("Admin cannot add items to cart");
         }
 
-        cartService.addToCart(userDetails.getUserId(), request);
+        redisCartService.addToCart(
+                userDetails.getUserId(),
+                request.getProductId(),
+                request.getQuantity()
+        );
 
         return ApiResponse.success(
                 "Product added to cart",
@@ -78,17 +82,17 @@ public class CartController {
 
     /* ================= REMOVE ITEM ================= */
 
-    @DeleteMapping("/items/{itemId}")
+    @DeleteMapping("/items/{productId}")
     public ApiResponse<Void> removeItem(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long itemId
+            @PathVariable Long productId
     ) {
 
         if (userDetails == null) {
             throw new RuntimeException("User not authenticated");
         }
 
-        cartService.removeItem(userDetails.getUserId(), itemId);
+        redisCartService.removeItem(userDetails.getUserId(), productId);
 
         return ApiResponse.success(
                 "Item removed from cart",

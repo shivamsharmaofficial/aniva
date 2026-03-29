@@ -17,7 +17,7 @@ import java.math.BigDecimal;
 @RestController
 @RequestMapping("/api/admin/products")
 @RequiredArgsConstructor
-@PreAuthorize("hasAuthority('ROLE_ADMIN')") // 🔥 FIXED
+@PreAuthorize("hasRole('ADMIN')")
 public class AdminProductController {
 
     private final ProductService productService;

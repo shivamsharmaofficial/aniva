@@ -2,6 +2,7 @@ package com.aniva.modules.system.service;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -12,6 +13,7 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
 
+    @Async("emailTaskExecutor")
     public void sendOrderConfirmation(String email, String orderNumber) {
 
         SimpleMailMessage message = new SimpleMailMessage();

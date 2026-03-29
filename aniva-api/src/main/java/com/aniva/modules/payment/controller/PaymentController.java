@@ -5,8 +5,9 @@ import org.springframework.web.bind.annotation.*;
 
 import com.aniva.core.response.ApiResponse;
 import com.aniva.modules.order.dto.OrderResponse;
-import com.aniva.modules.order.entity.UserOrder;
+import com.aniva.modules.order.service.OrderService;
 import com.aniva.modules.payment.dto.PaymentRequest;
+import com.aniva.modules.payment.dto.PaymentVerifyRequest;
 import com.aniva.modules.payment.service.PaymentService;
 import com.aniva.modules.system.entity.SystemSetting;
 import com.aniva.modules.system.repository.SystemSettingRepository;
@@ -19,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 public class PaymentController {
 
     private final PaymentService paymentService;
+    private final OrderService orderService;
     private final SystemSettingRepository settingRepository;
 
     /* ========================
@@ -47,7 +49,6 @@ public class PaymentController {
                 .orElseThrow(() -> new RuntimeException("Payment mode setting not found"));
 
         setting.setValue(mode);
-
         settingRepository.save(setting);
 
         return ApiResponse.success(
@@ -70,7 +71,37 @@ public class PaymentController {
     }
 
     /* ========================
-       CONFIRM PAYMENT
+       VERIFY + CONFIRM PAYMENT (SAFE)
+    ======================== */
+
+    @PostMapping("/verify")
+    public ApiResponse<OrderResponse> verifyPayment(
+            @RequestBody PaymentVerifyRequest request
+    ) {
+
+        try {
+            paymentService.verifyRazorpaySignature(
+                    request.getRazorpayOrderId(),
+                    request.getPaymentId(),
+                    request.getSignature()
+            );
+
+            return ApiResponse.success(
+                    "Payment verified successfully",
+                    orderService.toResponse(
+                            paymentService.confirmPayment(
+                                    request.getOrderId(),
+                                    request.getPaymentId()
+                            )
+                    )
+            );
+        } catch (Exception ex) {
+            return ApiResponse.failure("Invalid payment");
+        }
+    }
+
+    /* ========================
+       CONFIRM (LEGACY SUPPORT)
     ======================== */
 
     @PostMapping("/confirm")
@@ -78,22 +109,14 @@ public class PaymentController {
             @RequestBody PaymentRequest request
     ) {
 
-        UserOrder order = paymentService.confirmPayment(
-                request.getOrderId(),
-                request.getPaymentId()
-        );
-
-        OrderResponse response = OrderResponse.builder()
-                .id(order.getId())
-                .orderNumber(order.getOrderNumber())
-                .totalAmount(order.getTotalAmount())
-                .status(order.getStatus().name())
-                .createdAt(order.getCreatedAt())
-                .build();
-
         return ApiResponse.success(
                 "Payment confirmed successfully",
-                response
+                orderService.toResponse(
+                        paymentService.confirmPayment(
+                                request.getOrderId(),
+                                request.getPaymentId()
+                        )
+                )
         );
     }
 }

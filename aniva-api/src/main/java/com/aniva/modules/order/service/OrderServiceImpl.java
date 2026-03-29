@@ -5,8 +5,11 @@ import com.aniva.modules.auth.repository.UserRepository;
 import com.aniva.modules.cart.entity.Cart;
 import com.aniva.modules.cart.entity.CartItem;
 import com.aniva.modules.cart.repository.CartRepository;
+import com.aniva.modules.inventory.service.InventoryService;
 import com.aniva.modules.cart.repository.CartItemRepository;
+import com.aniva.modules.order.dto.CheckoutRequest;
 import com.aniva.modules.order.dto.OrderResponse;
+import com.aniva.modules.order.dto.OrderStatusResponse;
 import com.aniva.modules.order.entity.OrderItem;
 import com.aniva.modules.order.entity.UserOrder;
 import com.aniva.modules.order.enums.OrderStatus;
@@ -22,6 +25,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -37,6 +41,7 @@ public class OrderServiceImpl implements OrderService {
     private final ProductRepository productRepository;
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
+    private final InventoryService inventoryService;
 
     /* ========================
        CHECKOUT
@@ -45,6 +50,14 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public UserOrder checkout(Long userId) {
+        return checkout(userId, null);
+    }
+
+    @Override
+    @Transactional
+    public UserOrder checkout(Long userId, CheckoutRequest request) {
+
+        validateCheckoutRequest(request);
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -53,7 +66,7 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new RuntimeException("Cart not found"));
 
         List<CartItem> cartItems =
-                cartItemRepository.findByCartId(cart.getId());
+                cartItemRepository.findDetailedByCartId(cart.getId());
 
         if (cartItems.isEmpty()) {
             throw new RuntimeException("Cart is empty");
@@ -65,21 +78,14 @@ public class OrderServiceImpl implements OrderService {
         for (CartItem cartItem : cartItems) {
 
             Product product = productRepository
-                    .findByIdForUpdate(cartItem.getProduct().getId())
+                    .findById(cartItem.getProduct().getId())
                     .orElseThrow(() -> new RuntimeException("Product not found"));
-
-            int availableStock =
-                    product.getTotalStock() - product.getReservedStock();
-
-            if (availableStock < cartItem.getQuantity()) {
-                throw new RuntimeException(
-                        "Not enough stock for " + product.getName());
-            }
-
-            product.setReservedStock(
-                    product.getReservedStock() + cartItem.getQuantity());
-
-            productRepository.save(product);
+            inventoryService.reserveStock(
+                    product.getId(),
+                    cartItem.getQuantity(),
+                    null,
+                    "CHECKOUT"
+            );
 
             BigDecimal price =
                     product.getDiscountPrice() != null
@@ -164,7 +170,50 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new RuntimeException("Order not found"));
     }
 
+    @Override
+    public OrderStatusResponse getOrderStatus(Long userId, Long orderId) {
+
+        UserOrder order = getOrderById(orderId);
+
+        if (!order.getUser().getId().equals(userId)) {
+            throw new RuntimeException("Access denied");
+        }
+
+        return OrderStatusResponse.builder()
+                .orderId(order.getId())
+                .status(order.getStatus().name())
+                .paymentStatus(order.getPaymentStatus() == null ? null : order.getPaymentStatus().name())
+                .createdAt(order.getCreatedAt())
+                .build();
+    }
+
     private String generateOrderNumber() {
         return "ANIVA-" + System.currentTimeMillis();
+    }
+
+    private void validateCheckoutRequest(CheckoutRequest request) {
+
+        if (request == null) {
+            return;
+        }
+
+        if (request.getShippingAddressId() != null
+                && !request.getShippingAddressId().isBlank()
+                && !request.getShippingAddressId().chars().allMatch(Character::isDigit)) {
+            throw new RuntimeException("Invalid shipping address ID");
+        }
+
+        if (request.getItems() == null || request.getItems().isEmpty()) {
+            return;
+        }
+
+        for (var item : request.getItems()) {
+            if (item == null || item.getProductId() == null) {
+                throw new RuntimeException("Invalid checkout items");
+            }
+            if (item.getQuantity() == null || item.getQuantity() <= 0) {
+                throw new RuntimeException("Invalid checkout quantity");
+            }
+        }
     }
 }

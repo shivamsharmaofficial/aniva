@@ -2,25 +2,39 @@ package com.aniva.core.config;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
 import java.util.List;
 
 @Component
-@RequiredArgsConstructor
 public class JwtUtil {
 
-    @Value("${jwt.secret}")
-    private String secret;
+    private static final int MINIMUM_JWT_SECRET_BYTES = 32;
 
-    private final long EXPIRATION_TIME = 1000 * 60 * 60 * 24; // 24 hours
+    private final String secret;
+    private final long expirationTime;
+
+    public JwtUtil(
+            @Value("${jwt.secret}") String secret,
+            @Value("${jwt.expiration:86400000}") long expirationTime) {
+        if (secret == null || secret.isBlank()) {
+            throw new IllegalStateException("JWT secret must be configured");
+        }
+
+        if (secret.getBytes(StandardCharsets.UTF_8).length < MINIMUM_JWT_SECRET_BYTES) {
+            throw new IllegalStateException("JWT secret must be at least 32 bytes for HS256");
+        }
+
+        this.secret = secret;
+        this.expirationTime = expirationTime;
+    }
 
     private Key getSigningKey() {
-        return Keys.hmacShaKeyFor(secret.getBytes());
+        return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
     /*
@@ -36,7 +50,7 @@ public class JwtUtil {
                 .claim("roles", roles)
                 .setIssuedAt(new Date())
                 .setExpiration(
-                        new Date(System.currentTimeMillis() + EXPIRATION_TIME)
+                        new Date(System.currentTimeMillis() + expirationTime)
                 )
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();

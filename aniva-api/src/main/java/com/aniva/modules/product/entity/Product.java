@@ -10,7 +10,13 @@ import com.aniva.core.audit.BaseEntity;
 import org.hibernate.annotations.BatchSize;
 
 @Entity
-@Table(name = "products", schema = "product")
+@Table(
+        name = "products",
+        schema = "product",
+        indexes = {
+                @Index(name = "idx_category_active", columnList = "category_id, is_active")
+        }
+)
 @Getter
 @Setter
 @NoArgsConstructor

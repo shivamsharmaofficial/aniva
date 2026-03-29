@@ -16,7 +16,16 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(schema = "\"order\"", name = "orders")
+@Table(
+        schema = "\"order\"",
+        name = "orders",
+        indexes = {
+                @Index(name = "idx_user_created", columnList = "user_id, created_at")
+        },
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_orders_payment_id", columnNames = "payment_id")
+        }
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -43,7 +52,7 @@ public class UserOrder extends BaseEntity {
     @Column(name = "payment_status")
     private PaymentStatus paymentStatus;
 
-    @Column(name = "payment_id")
+    @Column(name = "payment_id", unique = true)
     private String paymentId;
 
     @Column(name = "payment_reference")

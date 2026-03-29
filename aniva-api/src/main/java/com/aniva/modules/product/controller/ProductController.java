@@ -36,8 +36,8 @@ public class ProductController {
                         minPrice,
                         maxPrice,
                         search,
-                        "ACTIVE",          // 🔥 FORCE ACTIVE
-                        false,             // 🔥 NEVER include deleted
+                        "ACTIVE",
+                        false,
                         sort,
                         direction,
                         page,
