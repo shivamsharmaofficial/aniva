@@ -7,7 +7,6 @@ spring:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD}
-      ssl: true
       timeout: 2s
       lettuce:
         pool:
@@ -29,8 +28,8 @@ spring:
   jpa:
     open-in-view: false
     hibernate:
-      ddl-auto: update   # ⚠️ change to 'validate' later in strict prod
-    show-sql: false
+      ddl-auto: update
+    show-sql: false   # 🔥 IMPORTANT (disable in production)
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     properties:
       hibernate:
@@ -38,10 +37,10 @@ spring:
         default_batch_fetch_size: 50
 
   mail:
-    host: ${MAIL_HOST}
-    port: ${MAIL_PORT:587}
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
+    host: smtp.gmail.com
+    port: 587
+    username: dummy@gmail.com
+    password: dummy
     properties:
       mail:
         smtp:
