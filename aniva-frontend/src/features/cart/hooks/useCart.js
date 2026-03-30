@@ -14,6 +14,23 @@ export function useCart() {
     queryKey: ["cart"],
     queryFn: fetchCart,
     staleTime: 1000 * 60,
+    retry: false,
+    placeholderData: [],
+    select: (data) => {
+      if (Array.isArray(data)) {
+        return data;
+      }
+
+      if (Array.isArray(data?.items)) {
+        return data.items;
+      }
+
+      if (Array.isArray(data?.content)) {
+        return data.content;
+      }
+
+      return [];
+    },
   });
 }
 

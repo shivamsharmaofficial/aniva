@@ -17,15 +17,17 @@ import "../styles/checkout.css";
 
 const Checkout = () => {
   const location = useLocation();
-  const { data: items = [], isLoading } = useCart();
+  const { data, isLoading, isError } = useCart();
+  const items = Array.isArray(data) ? data : [];
   const buyNowItem = location.state?.buyNowItem;
   const finalItems = buyNowItem ? [buyNowItem] : items;
   const queryClient = useQueryClient();
   const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
 
-  const totalAmount = finalItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
+  const totalAmount = (finalItems || []).reduce(
+    (sum, item) =>
+      sum + (Number(item?.price) || 0) * (Number(item?.quantity) || 0),
     0
   );
 
@@ -44,10 +46,6 @@ const Checkout = () => {
 
       const mode = await getPaymentMode();
 
-      /* ===============================
-         MOCK PAYMENT
-      =============================== */
-
       if (mode === "MOCK") {
         await confirmPayment(order.id, "MOCK_PAYMENT");
 
@@ -56,13 +54,8 @@ const Checkout = () => {
         showToast("Payment successful 🎉");
 
         window.location.href = "/orders";
-
         return;
       }
-
-      /* ===============================
-         RAZORPAY PAYMENT
-      =============================== */
 
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY,
@@ -70,7 +63,6 @@ const Checkout = () => {
         currency: "INR",
         name: "ANIVA",
         description: "Order Payment",
-
         handler: async function (response) {
           await confirmPayment(
             order.id,
@@ -91,7 +83,6 @@ const Checkout = () => {
       }
 
       const rzp = new window.Razorpay(options);
-
       rzp.open();
     } catch (err) {
       console.error("Checkout failed", err);
@@ -101,17 +92,17 @@ const Checkout = () => {
     }
   };
 
-  /* ===============================
-     LOADING
-  =============================== */
-
   if (isLoading) {
     return <div className="checkout-page">Loading checkout...</div>;
   }
 
-  /* ===============================
-     EMPTY CART
-  =============================== */
+  if (isError && !buyNowItem) {
+    return (
+      <div className="checkout-page">
+        Unable to load checkout right now.
+      </div>
+    );
+  }
 
   if (finalItems.length === 0) {
     return (
@@ -128,19 +119,12 @@ const Checkout = () => {
       </h2>
 
       <div className="checkout-layout">
-        {/* ===============================
-            LEFT SIDE (ADDRESS + PAYMENT)
-        =============================== */}
-
         <div className="checkout-left">
           <AddressForm />
-
           <PaymentMethod />
 
-          {/* CART ITEMS */}
-
           <div className="checkout-items">
-            {finalItems.map((item) => (
+            {(finalItems || []).map((item) => (
               <div key={item.id || item.productId} className="checkout-item">
                 <img
                   src={item.imageUrl || item.image}
@@ -149,19 +133,13 @@ const Checkout = () => {
 
                 <div className="checkout-item-info">
                   <h4>{item.name}</h4>
-
                   <p>Quantity: {item.quantity}</p>
-
                   <p>₹{item.price}</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
-
-        {/* ===============================
-            RIGHT SIDE (ORDER SUMMARY)
-        =============================== */}
 
         <OrderSummary
           totalAmount={totalAmount}

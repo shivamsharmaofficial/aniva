@@ -6,8 +6,9 @@ import CartSummary from "../components/CartSummary";
 import "@/features/cart/styles/cart.css";
 
 function Cart() {
-  const { data: items = [], isLoading } = useCart();
+  const { data, isLoading, isError } = useCart();
   const removeMutation = useRemoveFromCart();
+  const items = Array.isArray(data) ? data : [];
 
   const handleRemove = (id) => {
     removeMutation.mutate(id);
@@ -17,8 +18,17 @@ function Cart() {
     return <div className="cart-container">Loading cart...</div>;
   }
 
+  if (isError) {
+    return (
+      <div className="cart-container">
+        Unable to load cart right now.
+      </div>
+    );
+  }
+
   const total = items.reduce(
-    (sum, item) => sum + item.price * item.quantity,
+    (sum, item) =>
+      sum + (Number(item?.price) || 0) * (Number(item?.quantity) || 0),
     0
   );
 

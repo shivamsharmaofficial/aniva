@@ -1,53 +1,51 @@
-import { useCartStore } from "../store/useCartStore";
-import CartItem from "./CartItem";
 import { useNavigate } from "react-router-dom";
+import { useCart, useRemoveFromCart } from "@/features/cart/hooks/useCart";
+import CartItem from "@/features/cart/components/CartItem";
 
 import "../styles/cartDrawer.css";
 
 function CartDrawer({ open, onClose }) {
-
   const navigate = useNavigate();
-
-  const {
-    items,
-    removeFromCart
-  } = useCartStore();
+  const { data, isLoading, isError } = useCart();
+  const removeMutation = useRemoveFromCart();
+  const items = Array.isArray(data) ? data : [];
 
   const total = items.reduce(
-    (sum, item) => sum + item.price * item.quantity,
+    (sum, item) =>
+      sum + (Number(item?.price) || 0) * (Number(item?.quantity) || 0),
     0
   );
 
   return (
-
     <div className={`cart-drawer ${open ? "open" : ""}`}>
-
       <div className="drawer-header">
-
         <h3>Your Cart</h3>
-
-        <button onClick={onClose}>✕</button>
-
+        <button onClick={onClose}>×</button>
       </div>
 
       <div className="drawer-items">
-
-        {items.length === 0 ? (
+        {isLoading ? (
+          <p>Loading cart...</p>
+        ) : isError ? (
+          <p>Unable to load cart.</p>
+        ) : items.length === 0 ? (
           <p>Your cart is empty</p>
         ) : (
-          items.map(item => (
+          items.map((item) => (
             <CartItem
               key={item.id}
               item={item}
-              onRemove={removeFromCart}
+              onRemove={(id) => removeMutation.mutate(id)}
+              deleting={
+                removeMutation.isPending &&
+                removeMutation.variables === item.id
+              }
             />
           ))
         )}
-
       </div>
 
       <div className="drawer-footer">
-
         <h4>Subtotal: ₹{total}</h4>
 
         <button
@@ -64,14 +62,12 @@ function CartDrawer({ open, onClose }) {
             navigate("/checkout");
             onClose();
           }}
+          disabled={isLoading || items.length === 0}
         >
           Checkout
         </button>
-
       </div>
-
     </div>
-
   );
 }
 

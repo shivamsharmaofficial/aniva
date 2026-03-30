@@ -12,7 +12,7 @@ import AuthDrawer from "@/components/layout/AuthDrawer";
 import { BRAND_NAME, ROUTES } from "@/constants/siteConstants";
 import { clearSession } from "@/features/auth/utils/authService";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
-import { useCartStore } from "@/features/cart/store/useCartStore";
+import { useCart } from "@/features/cart/hooks/useCart";
 import "@/components/styles/headerBar.css";
 
 const getStoredAuthStatus = () => {
@@ -39,9 +39,10 @@ function HeaderBar() {
   const isLoggedIn =
     isAuthenticated || Boolean(accessToken) || getStoredAuthStatus();
 
-  const { items } = useCartStore();
-  const cartCount = items.reduce(
-    (total, item) => total + item.quantity,
+  const { data: items = [] } = useCart();
+  const safeItems = Array.isArray(items) ? items : [];
+  const cartCount = safeItems.reduce(
+    (total, item) => total + (Number(item?.quantity) || 0),
     0
   );
 
@@ -84,97 +85,97 @@ function HeaderBar() {
 
           <div className="header-bar__actions-wrap">
             <div className="header-bar__actions">
-            <Link
-              to={ROUTES.wishlist}
-              className="header-bar__icon-button"
-              aria-label="Wishlist"
-            >
-              <Heart className="size-5" />
-            </Link>
-
-            <Link
-              to={ROUTES.cart}
-              className="header-bar__icon-button header-bar__cart"
-              aria-label="Cart"
-            >
-              <ShoppingBag className="size-5" />
-              {cartCount > 0 && (
-                <span className="header-bar__badge">
-                  {cartCount}
-                </span>
-              )}
-            </Link>
-
-            {!isLoggedIn ? (
-              <button
-                type="button"
-                onClick={() => setIsDrawerOpen(true)}
+              <Link
+                to={ROUTES.wishlist}
                 className="header-bar__icon-button"
-                aria-label="Open login drawer"
+                aria-label="Wishlist"
               >
-                <UserRound className="size-5" />
-              </button>
-            ) : (
-              <div className="header-bar__account" ref={dropdownRef}>
+                <Heart className="size-5" />
+              </Link>
+
+              <Link
+                to={ROUTES.cart}
+                className="header-bar__icon-button header-bar__cart"
+                aria-label="Cart"
+              >
+                <ShoppingBag className="size-5" />
+                {cartCount > 0 && (
+                  <span className="header-bar__badge">
+                    {cartCount}
+                  </span>
+                )}
+              </Link>
+
+              {!isLoggedIn ? (
                 <button
                   type="button"
-                  onClick={() => setAccountMenuOpen((prev) => !prev)}
-                  className="header-bar__icon-button header-bar__account-trigger"
-                  aria-label="Open account menu"
+                  onClick={() => setIsDrawerOpen(true)}
+                  className="header-bar__icon-button"
+                  aria-label="Open login drawer"
                 >
                   <UserRound className="size-5" />
-                  <span className="header-bar__account-label">
-                    Account
-                  </span>
                 </button>
+              ) : (
+                <div className="header-bar__account" ref={dropdownRef}>
+                  <button
+                    type="button"
+                    onClick={() => setAccountMenuOpen((prev) => !prev)}
+                    className="header-bar__icon-button header-bar__account-trigger"
+                    aria-label="Open account menu"
+                  >
+                    <UserRound className="size-5" />
+                    <span className="header-bar__account-label">
+                      Account
+                    </span>
+                  </button>
 
-                {accountMenuOpen && (
-                  <div className="header-bar__menu">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setAccountMenuOpen(false);
-                        navigate(ROUTES.accountProfile);
-                      }}
-                      className="header-bar__menu-item"
-                    >
-                      <UserRound className="size-4" />
-                      Profile
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setAccountMenuOpen(false);
-                        navigate(ROUTES.orders);
-                      }}
-                      className="header-bar__menu-item"
-                    >
-                      <ShoppingCart className="size-4" />
-                      My Orders
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setAccountMenuOpen(false);
-                        navigate(ROUTES.accountSettings);
-                      }}
-                      className="header-bar__menu-item"
-                    >
-                      <Settings className="size-4" />
-                      Settings
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleLogout}
-                      className="header-bar__menu-item"
-                    >
-                      <LogOut className="size-4" />
-                      Logout
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
+                  {accountMenuOpen && (
+                    <div className="header-bar__menu">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAccountMenuOpen(false);
+                          navigate(ROUTES.accountProfile);
+                        }}
+                        className="header-bar__menu-item"
+                      >
+                        <UserRound className="size-4" />
+                        Profile
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAccountMenuOpen(false);
+                          navigate(ROUTES.orders);
+                        }}
+                        className="header-bar__menu-item"
+                      >
+                        <ShoppingCart className="size-4" />
+                        My Orders
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAccountMenuOpen(false);
+                          navigate(ROUTES.accountSettings);
+                        }}
+                        className="header-bar__menu-item"
+                      >
+                        <Settings className="size-4" />
+                        Settings
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleLogout}
+                        className="header-bar__menu-item"
+                      >
+                        <LogOut className="size-4" />
+                        Logout
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
