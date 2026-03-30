@@ -12,25 +12,15 @@ import java.util.concurrent.Executor;
 public class AsyncConfig {
 
     @Bean(name = "emailTaskExecutor")
-    public Executor taskExecutor() {
+    public Executor emailTaskExecutor() {
 
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(2);
-        executor.setMaxPoolSize(10);
-        executor.setQueueCapacity(100);
-        executor.setThreadNamePrefix("Email-");
-        executor.initialize();
-
-        return executor;
-    }
-
-    @Bean("emailTaskExecutor")
-    public Executor emailExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(5);
-        executor.setMaxPoolSize(20);
+        executor.setMaxPoolSize(10);
         executor.setQueueCapacity(100);
+        executor.setThreadNamePrefix("EmailExecutor-");
         executor.initialize();
+
         return executor;
     }
 }
