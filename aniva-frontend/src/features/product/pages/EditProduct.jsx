@@ -1,56 +1,47 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axiosInstance from "@/api/axiosInstance";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/components/ui/useToast";
+import {
+  fetchProductById,
+  updateProduct,
+} from "@/services/productService";
 import ProductForm from "./ProductForm";
 
 function EditProduct() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { showToast } = useToast();
 
-  const [loading, setLoading] = useState(false);
-  const [initialData, setInitialData] = useState(null);
-  const [fetching, setFetching] = useState(true);
-
-  /* ================= FETCH PRODUCT ================= */
+  const { data: initialData, isLoading: fetching, isError } = useQuery({
+    queryKey: ["product", id],
+    queryFn: () => fetchProductById(id),
+    enabled: !!id,
+  });
 
   useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        const res = await axiosInstance.get(
-          `/admin/products/${id}`
-        );
+    if (isError) {
+      showToast("Failed to load product");
+      navigate("/admin/products");
+    }
+  }, [isError, navigate, showToast]);
 
-        setInitialData(res.data.data);
-      } catch (error) {
-        console.error(error);
-        showToast("Failed to load product");
-        navigate("/admin/products");
-      } finally {
-        setFetching(false);
-      }
-    };
-
-    fetchProduct();
-  }, [id, navigate, showToast]);
-
-  /* ================= UPDATE ================= */
+  const mutation = useMutation({
+    mutationFn: ({ id, payload }) => updateProduct(id, payload),
+    onSuccess: () => {
+      showToast("Product updated successfully âœ¨");
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["product", id] });
+      navigate("/admin/products");
+    },
+    onError: () => {
+      showToast("Failed to update product âŒ");
+    },
+  });
 
   const handleUpdate = async (payload) => {
-    try {
-      setLoading(true);
-
-      await axiosInstance.put(`/admin/products/${id}`, payload);
-
-      showToast("Product updated successfully ✨");
-      navigate("/admin/products");
-    } catch (error) {
-      console.error(error);
-      showToast("Failed to update product ❌");
-    } finally {
-      setLoading(false);
-    }
+    mutation.mutate({ id, payload });
   };
 
   if (fetching) {
@@ -62,7 +53,7 @@ function EditProduct() {
       mode="edit"
       initialData={initialData}
       onSubmit={handleUpdate}
-      loading={loading}
+      loading={mutation.isPending}
     />
   );
 }

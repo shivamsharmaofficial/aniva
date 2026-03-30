@@ -1,36 +1,34 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axiosInstance from "@/api/axiosInstance";
+import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/components/ui/useToast";
+import { createProduct } from "@/services/productService";
 import ProductForm from "./ProductForm";
 import "@/features/product/styles/createProduct.css";
 
 function CreateProduct() {
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const [loading, setLoading] = useState(false);
+
+  const mutation = useMutation({
+    mutationFn: createProduct,
+    onSuccess: () => {
+      showToast("Product created successfully âœ¨");
+      navigate("/admin/products");
+    },
+    onError: () => {
+      showToast("Failed to create product âŒ");
+    },
+  });
 
   const handleCreate = async (payload) => {
-    try {
-      setLoading(true);
-
-      await axiosInstance.post("/admin/products", payload);
-
-      showToast("Product created successfully ✨");
-      navigate("/admin/products");
-    } catch (error) {
-      console.error(error);
-      showToast("Failed to create product ❌");
-    } finally {
-      setLoading(false);
-    }
+    mutation.mutate(payload);
   };
 
   return (
     <ProductForm
       mode="create"
       onSubmit={handleCreate}
-      loading={loading}
+      loading={mutation.isPending}
     />
   );
 }

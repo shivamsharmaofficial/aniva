@@ -2,6 +2,15 @@ import { Link } from "react-router-dom";
 import { useOrders } from "@/features/order/hooks/useOrders";
 import "@/features/order/styles/orders.css";
 
+const formatStatus = (status) => {
+  if (!status) return "Unknown";
+
+  return status
+    .toLowerCase()
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+};
+
 function Orders() {
   const { data, isLoading, isError } = useOrders();
   const orders = data?.content || [];
@@ -52,14 +61,16 @@ function Orders() {
                     order.status
                   ).toLowerCase()}`}
                 >
-                  {order.status}
+                  {formatStatus(order.status)}
                 </span>
               </div>
 
               <div className="order-card__grid">
                 <div>
                   <span>Total</span>
-                  <strong>Rs. {order.totalAmount}</strong>
+                  <strong>
+                    ₹{order.totalAmount?.toLocaleString("en-IN")}
+                  </strong>
                 </div>
 
                 <div>
@@ -71,10 +82,24 @@ function Orders() {
                   <span>Placed On</span>
                   <strong>
                     {order.createdAt
-                      ? new Date(order.createdAt).toLocaleDateString()
+                      ? new Date(order.createdAt).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })
                       : "Recently"}
                   </strong>
                 </div>
+              </div>
+
+              <div className="order-card__items">
+                {(order.items || []).slice(0, 2).map((item) => (
+                  <span key={item.id}>{item.productName}</span>
+                ))}
+
+                {order.items?.length > 2 && (
+                  <span>+{order.items.length - 2} more</span>
+                )}
               </div>
 
               <Link to={`/orders/${order.id}`} className="order-card__link">

@@ -1,11 +1,10 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useCartStore } from "@/features/cart/store/useCartStore";
+import { useAddToCart } from "@/features/cart/hooks/useCart";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
-import axiosInstance from "@/api/axiosInstance";
 import { useState } from "react";
 import { useToast } from "@/components/ui/useToast";
-import { getProductBySlug } from "@/features/product/api/productApi";
+import { addReview, fetchProductBySlug } from "@/services/productService";
 import Tabs from "@/components/ui/Tabs";
 import RelatedProducts from "@/features/product/components/RelatedProducts";
 
@@ -15,11 +14,10 @@ const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1603006905003-be475563bc59";
 
 function ProductDetails() {
-
   const { slug } = useParams();
   const navigate = useNavigate();
 
-  const { addToCart } = useCartStore();
+  const addToCartMutation = useAddToCart();
   const { isAuthenticated } = useAuthStore();
 
   const { showToast } = useToast();
@@ -37,19 +35,19 @@ function ProductDetails() {
 
   const { data: product, isLoading, isError } = useQuery({
     queryKey: ["product", slug],
-    queryFn: () => getProductBySlug(slug),
+    queryFn: () => fetchProductBySlug(slug),
     enabled: !!slug,
+    retry: 1,
   });
 
   /* ================= REVIEW ================= */
 
   const addReviewMutation = useMutation({
-    mutationFn: async () => {
-      return axiosInstance.post(`/products/${product.id}/reviews`, {
+    mutationFn: () =>
+      addReview(product.id, {
         rating,
         comment: reviewText,
-      });
-    },
+      }),
     onSuccess: () => {
       showToast("Review added ⭐");
       setReviewText("");
@@ -68,14 +66,9 @@ function ProductDetails() {
   const basePrice = product?.price ?? 0;
   const discountPrice = product?.discountPrice;
 
-  const price =
-    activeVariant?.variantPrice ??
-    discountPrice ??
-    basePrice;
+  const price = activeVariant?.variantPrice ?? discountPrice ?? basePrice;
 
-  const inStock = activeVariant
-    ? activeVariant.stockQuantity > 0
-    : true;
+  const inStock = activeVariant ? activeVariant.stockQuantity > 0 : true;
 
   const mainImage =
     selectedImage ||
@@ -85,48 +78,53 @@ function ProductDetails() {
 
   /* ================= ADD TO CART ================= */
 
-  const handleAddToCart = async () => {
-
+  const handleAddToCart = () => {
     if (!isAuthenticated) {
       navigate("/account/login");
       return;
     }
 
-    try {
-
-      await addToCart(
-        {
-          ...product,
-          selectedVariant: activeVariant || null
-        },
-        quantity
-      );
-
-      showToast("Added to cart ✨");
-
-      queryClient.invalidateQueries({ queryKey: ["cart"] });
-
-    } catch (err) {
-
-      console.error(err);
-      showToast("Error adding to cart");
-
+    if (!activeVariant?.id) {
+      showToast("Please select a variant");
+      return;
     }
 
+    addToCartMutation.mutate(
+      {
+        variantId: activeVariant.id,
+        quantity,
+      },
+      {
+        onSuccess: () => {
+          showToast("Added to cart ✨");
+        },
+        onError: () => {
+          showToast("Failed to add to cart");
+        },
+      }
+    );
   };
 
   /* ================= BUY NOW ================= */
 
-  const handleBuyNow = async () => {
-
+  const handleBuyNow = () => {
     if (!isAuthenticated) {
       navigate("/account/login");
       return;
     }
 
-    await handleAddToCart();
-    navigate("/checkout");
-
+    navigate("/checkout", {
+      state: {
+        buyNowItem: {
+          productId: product.id,
+          name: product.name,
+          price: price,
+          quantity,
+          image: mainImage,
+          variant: activeVariant || null,
+        },
+      },
+    });
   };
 
   /* ================= LOADING ================= */
@@ -142,14 +140,9 @@ function ProductDetails() {
   /* ================= TABS ================= */
 
   const tabs = [
-
     {
       label: "Description",
-      content: (
-        <div className="tab-description">
-          {product.description}
-        </div>
-      ),
+      content: <div className="tab-description">{product.description}</div>,
     },
 
     {
@@ -158,7 +151,7 @@ function ProductDetails() {
         <div className="tab-specs">
           {variants.map((v) => (
             <div key={v.id}>
-              {v.variantName} — ₹{v.variantPrice}
+              {v.variantName} â€” ₹{v.variantPrice}
             </div>
           ))}
         </div>
@@ -168,16 +161,13 @@ function ProductDetails() {
     {
       label: "Reviews",
       content: (
-
         <div className="reviews-section">
-
           <div className="review-form">
-
             <select
               value={rating}
-              onChange={(e)=>setRating(Number(e.target.value))}
+              onChange={(e) => setRating(Number(e.target.value))}
             >
-              {[5,4,3,2,1].map((r)=>(
+              {[5, 4, 3, 2, 1].map((r) => (
                 <option key={r} value={r}>
                   {r} ⭐
                 </option>
@@ -187,61 +177,52 @@ function ProductDetails() {
             <textarea
               placeholder="Write review"
               value={reviewText}
-              onChange={(e)=>setReviewText(e.target.value)}
+              onChange={(e) => setReviewText(e.target.value)}
             />
 
-            <button onClick={()=>addReviewMutation.mutate()}>
+            <button onClick={() => addReviewMutation.mutate()}>
               Submit Review
             </button>
-
           </div>
 
           <div className="review-list">
-
-            {(product.reviews || []).map((review)=>(
+            {(product.reviews || []).map((review) => (
               <div key={review.id} className="review-item">
                 <div>{"⭐".repeat(review.rating)}</div>
                 <p>{review.comment}</p>
               </div>
             ))}
-
           </div>
-
         </div>
-
       ),
     },
-
   ];
 
   /* ================= UI ================= */
 
   return (
-
     <section className="product-details">
-
       <div className="breadcrumb">
         <Link to="/">Home</Link> / {product.name}
       </div>
 
       <div className="product-details-grid">
-
         {/* IMAGE SECTION */}
 
         <div className="product-image-section">
-
           <div className="image-wrapper">
             <img
               src={mainImage}
               alt={product.name}
               className="main-product-image"
-              onClick={()=>setShowLightbox(true)}
-              onError={(e)=>{e.target.src = FALLBACK_IMAGE}}
+              onClick={() => setShowLightbox(true)}
+              onError={(e) => {
+                e.target.src = FALLBACK_IMAGE;
+              }}
             />
           </div>
 
           <div className="thumbnail-container">
-
             {images.map((img, index) => (
               <img
                 key={img.id || index}
@@ -250,89 +231,67 @@ function ProductDetails() {
                 onClick={() => setSelectedImage(img.imageUrl)}
               />
             ))}
-
           </div>
-
         </div>
 
         {/* PRODUCT INFO */}
 
         <div className="product-info-section">
-
           <h2>{product.name}</h2>
 
           <div className="price">₹{price}</div>
 
-          <div className={`stock ${inStock ? "in":"out"}`}>
-            {inStock ? "In Stock":"Out of Stock"}
+          <div className={`stock ${inStock ? "in" : "out"}`}>
+            {inStock ? "In Stock" : "Out of Stock"}
           </div>
 
           <button
-            className={`wishlist-btn ${wishlist ? "active":""}`}
-            onClick={()=>setWishlist(!wishlist)}
+            className={`wishlist-btn ${wishlist ? "active" : ""}`}
+            onClick={() => setWishlist(!wishlist)}
           >
-            {wishlist ? "♥ In Wishlist":"♡ Wishlist"}
+            {wishlist ? "♥ In Wishlist" : "♡ Wishlist"}
           </button>
 
           {variants.length > 0 && (
-
             <select
               value={activeVariant?.id}
-              onChange={(e)=>
+              onChange={(e) =>
                 setSelectedVariant(
-                  variants.find(v=>v.id == e.target.value)
+                  variants.find((v) => v.id == e.target.value)
                 )
               }
             >
-
-              {variants.map((v)=>(
+              {variants.map((v) => (
                 <option key={v.id} value={v.id}>
                   {v.variantName}
                 </option>
               ))}
-
             </select>
-
           )}
 
           <div className="quantity-selector">
-
-            <button
-              onClick={()=>setQuantity(q=>Math.max(1,q-1))}
-            >
+            <button onClick={() => setQuantity((q) => Math.max(1, q - 1))}>
               -
             </button>
 
             <span>{quantity}</span>
 
-            <button
-              onClick={()=>setQuantity(q=>q+1)}
-            >
-              +
-            </button>
-
+            <button onClick={() => setQuantity((q) => q + 1)}>+</button>
           </div>
 
           <div className="actions">
-
             <button
               onClick={handleAddToCart}
-              disabled={!inStock}
+              disabled={!inStock || addToCartMutation.isPending}
             >
-              Add to Cart
+              {addToCartMutation.isPending ? "Adding..." : "Add to Cart"}
             </button>
 
-            <button
-              onClick={handleBuyNow}
-              disabled={!inStock}
-            >
+            <button onClick={handleBuyNow} disabled={!inStock}>
               Buy Now
             </button>
-
           </div>
-
         </div>
-
       </div>
 
       <Tabs tabs={tabs} />
@@ -343,20 +302,12 @@ function ProductDetails() {
       />
 
       {showLightbox && (
-
-        <div
-          className="lightbox"
-          onClick={()=>setShowLightbox(false)}
-        >
+        <div className="lightbox" onClick={() => setShowLightbox(false)}>
           <img src={mainImage} alt="" />
         </div>
-
       )}
-
     </section>
-
   );
-
 }
 
 export default ProductDetails;

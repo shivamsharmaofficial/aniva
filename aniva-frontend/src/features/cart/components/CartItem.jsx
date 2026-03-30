@@ -1,4 +1,15 @@
-function CartItem({ item, onRemove }) {
+import { useNavigate } from "react-router-dom";
+
+function CartItem({ item, onRemove, deleting = false }) {
+  const navigate = useNavigate();
+
+  const handleBuyNow = (item) => {
+    navigate("/checkout", {
+      state: {
+        buyNowItem: item,
+      },
+    });
+  };
 
   return (
     <div className="cart-item">
@@ -20,8 +31,13 @@ function CartItem({ item, onRemove }) {
         <button
           className="remove-btn"
           onClick={() => onRemove(item.id)}
+          disabled={deleting}
         >
-          Remove
+          {deleting ? "Removing..." : "Remove"}
+        </button>
+
+        <button onClick={() => handleBuyNow(item)}>
+          Buy Now
         </button>
 
       </div>

@@ -3,6 +3,15 @@ import { useOrders } from "../hooks/useOrders";
 import OrderSkeleton from "../components/OrderSkeleton";
 import "../styles/profile.css";
 
+const formatStatus = (status) => {
+  if (!status) return "Unknown";
+
+  return status
+    .toLowerCase()
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+};
+
 function OrderHistory() {
   const [page, setPage] = useState(0);
   const { data, isLoading } = useOrders(page);
@@ -50,7 +59,7 @@ function OrderHistory() {
               <span
                 className={`status-badge ${order.status.toLowerCase()}`}
               >
-                {order.status}
+                {formatStatus(order.status)}
               </span>
             </div>
           </div>

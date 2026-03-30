@@ -1,16 +1,13 @@
-import axiosInstance from "@/lib/axios";
+import { apiGet, apiPost, apiDelete } from "@/lib/apiClient";
 
-export const fetchCart = () => {
-  return axiosInstance.get("/cart");
+export const fetchCart = async () => {
+  return await apiGet("/cart");
 };
 
-export const addToCart = (variantId, quantity) => {
-  return axiosInstance.post("/cart/items", {
-    variantId,
-    quantity,
-  });
+export const addToCartApi = async (payload) => {
+  return await apiPost("/cart/items", payload);
 };
 
-export const removeFromCart = (itemId) => {
-  return axiosInstance.delete(`/cart/items/${itemId}`);
+export const removeFromCartApi = async (itemId) => {
+  return await apiDelete(`/cart/items/${itemId}`);
 };
