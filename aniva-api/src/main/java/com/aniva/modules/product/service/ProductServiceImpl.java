@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.text.Normalizer;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -206,10 +207,12 @@ public class ProductServiceImpl implements ProductService {
             int page,
             int size) {
 
+        List<String> safeCategorySlugs = normalizeCategorySlugs(categorySlugs);
+
         Pageable pageable = buildPageable(sort, direction, page, size);
 
         ProductListCacheValue cachedPage = selfProvider.getObject().getCachedProducts(
-                categorySlugs,
+                safeCategorySlugs,
                 minPrice,
                 maxPrice,
                 search,
@@ -244,11 +247,13 @@ public class ProductServiceImpl implements ProductService {
             int page,
             int size) {
 
+        List<String> safeCategorySlugs = normalizeCategorySlugs(categorySlugs);
+
         Pageable pageable = buildPageable(sort, direction, page, size);
 
         Page<ProductResponseDTO> productsPage = productRepository.findAll(
                 ProductSpecification.filter(
-                        categorySlugs,
+                        safeCategorySlugs,
                         minPrice,
                         maxPrice,
                         search,
@@ -426,6 +431,18 @@ public class ProductServiceImpl implements ProductService {
 
     private static String normalizeDirection(String direction) {
         return "asc".equalsIgnoreCase(direction) ? "asc" : "desc";
+    }
+
+    private List<String> normalizeCategorySlugs(List<String> categorySlugs) {
+        if (categorySlugs == null || categorySlugs.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return categorySlugs.stream()
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .filter(value -> !value.isEmpty())
+                .toList();
     }
 
     public record ProductListCacheValue(

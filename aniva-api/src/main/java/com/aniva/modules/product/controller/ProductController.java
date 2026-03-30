@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -32,7 +33,7 @@ public class ProductController {
         return ApiResponse.success(
                 "Products fetched successfully",
                 productService.getProducts(
-                        category,
+                        category == null ? Collections.emptyList() : category,
                         minPrice,
                         maxPrice,
                         search,

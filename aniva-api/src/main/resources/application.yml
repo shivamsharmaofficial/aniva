@@ -1,6 +1,6 @@
 spring:
   cache:
-    type: redis
+    type: none
 
   data:
     redis:
