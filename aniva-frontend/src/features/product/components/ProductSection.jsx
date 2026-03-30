@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import ProductCard from "./ProductCard";
 import SkeletonCard from "@/components/ui/SkeletonCard";
@@ -12,13 +12,18 @@ function ProductSection() {
   const navigate = useNavigate();
   const [showFilters, setShowFilters] = useState(false);
 
+  const searchParamsKey = searchParams.toString();
+
   /* ================= URL STATE ================= */
 
-  const categoryParams = searchParams.getAll("category");
+  const categoryParams = useMemo(
+    () => searchParams.getAll("category"),
+    [searchParamsKey]
+  );
   const search = searchParams.get("search") || "";
   const sort = searchParams.get("sort") || "createdAt";
   const direction = searchParams.get("direction") || "desc";
-  const page = parseInt(searchParams.get("page") || "0");
+  const page = parseInt(searchParams.get("page") || "0", 10);
 
   const minPriceParam = searchParams.get("minPrice");
   const maxPriceParam = searchParams.get("maxPrice");
@@ -30,6 +35,10 @@ function ProductSection() {
 
   useEffect(() => {
     document.body.style.overflow = showFilters ? "hidden" : "auto";
+
+    return () => {
+      document.body.style.overflow = "auto";
+    };
   }, [showFilters]);
 
   /* ================= UPDATE PARAMS ================= */
@@ -54,7 +63,7 @@ function ProductSection() {
 
       setSearchParams(params);
     },
-    [searchParams, setSearchParams]
+    [searchParamsKey, setSearchParams]
   );
 
   /* ================= CLEAR FILTERS ================= */
@@ -68,7 +77,10 @@ function ProductSection() {
   const [localSearch, setLocalSearch] = useState(search);
 
   useEffect(() => {
+    setLocalSearch(search);
+  }, [search]);
 
+  useEffect(() => {
     if (localSearch === search) return;
 
     const timer = setTimeout(() => {
@@ -76,21 +88,23 @@ function ProductSection() {
     }, 500);
 
     return () => clearTimeout(timer);
+  }, [localSearch, search, updateParams]);
 
-  }, [localSearch]);
-  
   /* ================= FILTER OBJECT ================= */
 
-  const filters = {
-    category: categoryParams,
-    search,
-    sort,
-    direction,
-    page,
-    size: 12,
-    minPrice,
-    maxPrice
-  };
+  const filters = useMemo(
+    () => ({
+      category: categoryParams,
+      search,
+      sort,
+      direction,
+      page,
+      size: 12,
+      minPrice,
+      maxPrice,
+    }),
+    [categoryParams, search, sort, direction, page, minPrice, maxPrice]
+  );
 
   const { data: productResponse, isLoading } = useProducts(filters);
   const { data: categoryResponse } = useCategories();
@@ -175,14 +189,12 @@ function ProductSection() {
           />
         )}
 
-        {/* ===== SIDEBAR ===== */}
         <aside className={`sidebar ${showFilters ? "active" : ""}`}>
           <div className="sidebar-header">
             <h4>Refine Collection</h4>
-            <button onClick={() => setShowFilters(false)}>✕</button>
+            <button onClick={() => setShowFilters(false)}>×</button>
           </div>
 
-          {/* SEARCH */}
           <div className="filter-group">
             <label>Search</label>
             <input
@@ -193,7 +205,6 @@ function ProductSection() {
             />
           </div>
 
-          {/* CATEGORIES */}
           <div className="filter-group">
             <label>Categories</label>
 
@@ -217,7 +228,6 @@ function ProductSection() {
             )}
           </div>
 
-          {/* PRICE RANGE */}
           <div className="filter-group">
             <label>
               Price Range
@@ -247,12 +257,11 @@ function ProductSection() {
           </div>
         </aside>
 
-        {/* ===== PRODUCT GRID ===== */}
         <div className="product-content">
           {isLoading ? (
             <div className="product-grid">
               {Array(12)
-                .fill()
+                .fill(null)
                 .map((_, i) => (
                   <SkeletonCard key={i} />
                 ))}

@@ -1,5 +1,6 @@
+import { memo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useCartStore } from "@/features/cart/store/useCartStore";
+import { useAddToCart } from "@/features/cart/hooks/useCart";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
 import { useToast } from "@/components/ui/useToast";
 import Button from "@/components/ui/Button";
@@ -10,10 +11,8 @@ const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1603006905003-be475563bc59";
 
 function ProductCard({ product }) {
-
   const navigate = useNavigate();
-
-  const { addToCart } = useCartStore();
+  const addToCartMutation = useAddToCart();
   const { isAuthenticated } = useAuthStore();
   const { showToast } = useToast();
 
@@ -22,8 +21,7 @@ function ProductCard({ product }) {
     product?.images?.[0]?.imageUrl ||
     FALLBACK_IMAGE;
 
-  const handleAddToCart = async (e) => {
-
+  const handleAddToCart = (e) => {
     e.preventDefault();
 
     if (!isAuthenticated) {
@@ -32,77 +30,74 @@ function ProductCard({ product }) {
       return;
     }
 
-    try {
+    const variantId = product?.variants?.[0]?.id;
 
-      await addToCart(
-        {
-          ...product,
-          selectedVariant: null
-        },
-        1
-      );
-
-      showToast("Added to cart ✨");
-
-    } catch (err) {
-
-      console.error(err);
-      showToast("Failed to add to cart");
-
+    if (!variantId) {
+      showToast("Variant unavailable");
+      return;
     }
 
+    addToCartMutation.mutate(
+      {
+        variantId,
+        quantity: 1,
+      },
+      {
+        onSuccess: () => {
+          showToast("Added to cart ✨");
+        },
+        onError: (err) => {
+          console.error(err);
+          showToast("Failed to add to cart");
+        },
+      }
+    );
   };
 
   return (
-
     <div className="product-card">
-
       <Link
         to={`/product/${product.slug}`}
         className="product-link"
       >
-
         <div className="product-image-wrapper">
-
           <img
             src={imageUrl}
             alt={product.name}
             loading="lazy"
-            onError={(e)=>{e.target.src = FALLBACK_IMAGE}}
+            onError={(e) => {
+              e.target.src = FALLBACK_IMAGE;
+            }}
           />
-
         </div>
 
         <div className="product-content">
-
           <h3 className="product-title">
             {product.name}
           </h3>
 
           {product.description && (
-
             <p className="product-description">
               {product.description}
             </p>
-
           )}
 
           <div className="product-price">
             ₹{product.discountPrice || product.price}
           </div>
-
         </div>
-
       </Link>
 
-      <Button onClick={handleAddToCart}>
-        Add to Cart
+      <Button
+        onClick={handleAddToCart}
+        disabled={addToCartMutation.isPending}
+      >
+        {addToCartMutation.isPending ? "Adding..." : "Add to Cart"}
       </Button>
-
     </div>
-
   );
-
 }
 
-export default ProductCard;
+const MemoizedProductCard = memo(ProductCard);
+
+export default MemoizedProductCard;
