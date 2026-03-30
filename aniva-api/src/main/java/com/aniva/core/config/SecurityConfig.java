@@ -89,19 +89,19 @@ public class SecurityConfig {
             .formLogin(form -> form.disable())
             .httpBasic(httpBasic -> httpBasic.disable())
 
-            // Add JWT filter
-            .addFilterBefore(
-                    loggingFilter,
-                    RateLimitingFilter.class
-            )
-            .addFilterBefore(
-                    rateLimitingFilter,
-                    JwtAuthenticationFilter.class
-            )
-            .addFilterBefore(
-                    jwtAuthenticationFilter,
-                    UsernamePasswordAuthenticationFilter.class
-            );
+        // Add JWT filter
+        .addFilterBefore(
+                loggingFilter,
+                UsernamePasswordAuthenticationFilter.class
+        )
+        .addFilterBefore(
+                rateLimitingFilter,
+                UsernamePasswordAuthenticationFilter.class
+        )
+        .addFilterBefore(
+                jwtAuthenticationFilter,
+                UsernamePasswordAuthenticationFilter.class
+        );
 
         return http.build();
     }
