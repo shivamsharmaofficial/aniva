@@ -7,6 +7,8 @@ public class PaymentVerifyRequest {
 
     private Long orderId;
     private String razorpayOrderId;
-    private String paymentId;
-    private String signature;
+
+    // ✅ FIXED NAMES
+    private String razorpayPaymentId;
+    private String razorpaySignature;
 }

@@ -55,6 +55,9 @@ public class UserOrder extends BaseEntity {
     @Column(name = "payment_id", unique = true)
     private String paymentId;
 
+    @Column(name = "payment_order_id")
+    private String paymentOrderId;
+
     @Column(name = "payment_reference")
     private String paymentReference;
 
@@ -74,7 +77,7 @@ public class UserOrder extends BaseEntity {
         createdAt = LocalDateTime.now();
 
         if (status == null)
-            status = OrderStatus.PENDING;
+            status = OrderStatus.CREATED;
 
         if (paymentStatus == null)
         paymentStatus = PaymentStatus.PENDING;

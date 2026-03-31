@@ -2,22 +2,23 @@ package com.aniva.modules.order.controller;
 
 import com.aniva.core.response.ApiResponse;
 import com.aniva.core.security.CustomUserDetails;
-import com.aniva.modules.order.dto.CheckoutRequest;
-import com.aniva.modules.order.dto.OrderItemResponse;
-import com.aniva.modules.order.dto.OrderResponse;
-import com.aniva.modules.order.dto.OrderStatusResponse;
+import com.aniva.modules.order.dto.*;
+import com.aniva.modules.order.entity.UserOrder;
 import com.aniva.modules.order.service.OrderService;
+import com.aniva.modules.payment.service.PaymentService;
 
 import lombok.RequiredArgsConstructor;
-
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -25,20 +26,39 @@ import org.springframework.data.web.PageableDefault;
 public class OrderController {
 
     private final OrderService orderService;
+    private final PaymentService paymentService;
 
     /* ========================
        CHECKOUT
     ======================== */
 
     @PostMapping("/checkout")
-    public ApiResponse<OrderResponse> checkout(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestBody(required = false) CheckoutRequest request
+    public ResponseEntity<ApiResponse<CheckoutResponse>> checkout(
+            @RequestBody(required = false) CheckoutRequest request,
+            @AuthenticationPrincipal CustomUserDetails user
     ) {
 
-        return ApiResponse.success(
-                "Order created successfully",
-                orderService.toResponse(orderService.checkout(userDetails.getUserId(), request))
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated");
+        }
+
+        // Step 1: Create Order
+        UserOrder order = orderService.checkout(user.getUserId(), request);
+
+        // Step 2: Create Payment
+        String paymentData = paymentService.createPayment(order.getId());
+
+        // Step 3: Fetch UPDATED Order
+        UserOrder updatedOrder = orderService.getOrderById(order.getId());
+
+        // Step 4: Build Response
+        CheckoutResponse response = CheckoutResponse.builder()
+                .order(orderService.toResponse(updatedOrder))
+                .paymentData(paymentData)
+                .build();
+
+        return ResponseEntity.ok(
+                ApiResponse.success("Order created successfully", response)
         );
     }
 
@@ -47,17 +67,20 @@ public class OrderController {
     ======================== */
 
     @GetMapping("/my-orders")
-    public ApiResponse<Page<OrderResponse>> getMyOrders(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
+    public ResponseEntity<ApiResponse<Page<OrderResponse>>> getMyOrders(
+            @AuthenticationPrincipal CustomUserDetails user,
             @PageableDefault(size = 10, sort = "createdAt") Pageable pageable
     ) {
 
-        Page<OrderResponse> orders =
-                orderService.getUserOrders(userDetails.getUserId(), pageable);
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        }
 
-        return ApiResponse.success(
-                "Orders fetched successfully",
-                orders
+        Page<OrderResponse> orders =
+                orderService.getUserOrders(user.getUserId(), pageable);
+
+        return ResponseEntity.ok(
+                ApiResponse.success("Orders fetched successfully", orders)
         );
     }
 
@@ -66,16 +89,25 @@ public class OrderController {
     ======================== */
 
     @GetMapping("/{orderId}")
-    public ApiResponse<OrderResponse> getOrder(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
+    public ResponseEntity<ApiResponse<OrderResponse>> getOrder(
+            @AuthenticationPrincipal CustomUserDetails user,
             @PathVariable Long orderId
     ) {
 
-        OrderStatusResponse status = orderService.getOrderStatus(userDetails.getUserId(), orderId);
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        }
 
-        return ApiResponse.success(
-                "Order fetched successfully",
-                orderService.toResponse(orderService.getOrderById(status.getOrderId()))
+        OrderStatusResponse status =
+                orderService.getOrderStatus(user.getUserId(), orderId);
+
+        OrderResponse response =
+                orderService.toResponse(
+                        orderService.getOrderById(status.getOrderId())
+                );
+
+        return ResponseEntity.ok(
+                ApiResponse.success("Order fetched successfully", response)
         );
     }
 
@@ -84,38 +116,53 @@ public class OrderController {
     ======================== */
 
     @GetMapping("/{orderId}/items")
-    public ApiResponse<List<OrderItemResponse>> getOrderItems(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
+    public ResponseEntity<ApiResponse<List<OrderItemResponse>>> getOrderItems(
+            @AuthenticationPrincipal CustomUserDetails user,
             @PathVariable Long orderId
     ) {
 
-        orderService.getOrderStatus(userDetails.getUserId(), orderId);
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        }
 
-        List<OrderItemResponse> response = orderService.getOrderItems(orderId).stream()
+        orderService.getOrderStatus(user.getUserId(), orderId);
+
+        List<OrderItemResponse> response = orderService.getOrderItems(orderId)
+                .stream()
                 .map(item -> OrderItemResponse.builder()
                         .id(item.getId())
                         .productId(item.getProductId())
+                        .productName(item.getProductName())
                         .quantity(item.getQuantity())
                         .price(item.getPrice())
                         .totalPrice(item.getTotalPrice())
                         .build())
                 .toList();
 
-        return ApiResponse.success(
-                "Order items fetched",
-                response
+        return ResponseEntity.ok(
+                ApiResponse.success("Order items fetched", response)
         );
     }
 
+    /* ========================
+       ORDER STATUS
+    ======================== */
+
     @GetMapping("/{orderId}/status")
-    public ApiResponse<OrderStatusResponse> getOrderStatus(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
+    public ResponseEntity<ApiResponse<OrderStatusResponse>> getOrderStatus(
+            @AuthenticationPrincipal CustomUserDetails user,
             @PathVariable Long orderId
     ) {
 
-        return ApiResponse.success(
-                "Order status fetched successfully",
-                orderService.getOrderStatus(userDetails.getUserId(), orderId)
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        }
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Order status fetched successfully",
+                        orderService.getOrderStatus(user.getUserId(), orderId)
+                )
         );
     }
 }

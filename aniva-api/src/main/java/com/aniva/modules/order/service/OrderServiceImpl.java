@@ -2,11 +2,9 @@ package com.aniva.modules.order.service;
 
 import com.aniva.modules.auth.entity.User;
 import com.aniva.modules.auth.repository.UserRepository;
-import com.aniva.modules.cart.entity.Cart;
-import com.aniva.modules.cart.entity.CartItem;
-import com.aniva.modules.cart.repository.CartRepository;
+import com.aniva.modules.cart.dto.CartItemResponse;
+import com.aniva.modules.cart.service.CartService;
 import com.aniva.modules.inventory.service.InventoryService;
-import com.aniva.modules.cart.repository.CartItemRepository;
 import com.aniva.modules.order.dto.CheckoutRequest;
 import com.aniva.modules.order.dto.OrderResponse;
 import com.aniva.modules.order.dto.OrderStatusResponse;
@@ -16,11 +14,9 @@ import com.aniva.modules.order.enums.OrderStatus;
 import com.aniva.modules.order.repository.OrderItemRepository;
 import com.aniva.modules.order.repository.UserOrderRepository;
 import com.aniva.modules.payment.enums.PaymentStatus;
-import com.aniva.modules.product.entity.Product;
-import com.aniva.modules.product.repository.ProductRepository;
+import com.aniva.modules.shipping.service.DelhiveryService;
 
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -28,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -38,119 +33,95 @@ public class OrderServiceImpl implements OrderService {
     private final UserRepository userRepository;
     private final UserOrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
-    private final ProductRepository productRepository;
-    private final CartRepository cartRepository;
-    private final CartItemRepository cartItemRepository;
+    private final CartService cartService;
     private final InventoryService inventoryService;
-
-    /* ========================
-       CHECKOUT
-    ======================== */
+    private final DelhiveryService delhiveryService;
 
     @Override
     @Transactional
-    public UserOrder checkout(Long userId) {
-        return checkout(userId, null);
-    }
-
-    @Override
-    @Transactional
-    public UserOrder checkout(Long userId, CheckoutRequest request) {
-
-        validateCheckoutRequest(request);
-
+    public UserOrder createOrderFromCart(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        Cart cart = cartRepository.findByUser_Id(userId)
-                .orElseThrow(() -> new RuntimeException("Cart not found"));
+        List<CartItemResponse> cartItems = cartService.getCart(userId);
 
-        List<CartItem> cartItems =
-                cartItemRepository.findDetailedByCartId(cart.getId());
-
-        if (cartItems.isEmpty()) {
+        if (cartItems == null || cartItems.isEmpty()) {
             throw new RuntimeException("Cart is empty");
         }
 
-        List<OrderItem> items = new ArrayList<>();
         BigDecimal totalAmount = BigDecimal.ZERO;
-
-        for (CartItem cartItem : cartItems) {
-
-            Product product = productRepository
-                    .findById(cartItem.getProduct().getId())
-                    .orElseThrow(() -> new RuntimeException("Product not found"));
-            inventoryService.reserveStock(
-                    product.getId(),
-                    cartItem.getQuantity(),
-                    null,
-                    "CHECKOUT"
-            );
-
-            BigDecimal price =
-                    product.getDiscountPrice() != null
-                            ? product.getDiscountPrice()
-                            : product.getPrice();
-
-            BigDecimal itemTotal =
-                    price.multiply(BigDecimal.valueOf(cartItem.getQuantity()));
-
-            totalAmount = totalAmount.add(itemTotal);
-
-            OrderItem orderItem = OrderItem.builder()
-                    .productId(product.getId())
-                    .quantity(cartItem.getQuantity())
-                    .price(price)
-                    .totalPrice(itemTotal)
-                    .build();
-
-            items.add(orderItem);
-        }
 
         UserOrder order = UserOrder.builder()
                 .user(user)
                 .orderNumber(generateOrderNumber())
-                .totalAmount(totalAmount)
-                .status(OrderStatus.PENDING)
+                .totalAmount(BigDecimal.ZERO)
+                .status(OrderStatus.CREATED)
                 .paymentStatus(PaymentStatus.PENDING)
                 .build();
 
         order = orderRepository.save(order);
 
-        for (OrderItem item : items) {
-            item.setOrder(order);
+        for (CartItemResponse cartItem : cartItems) {
+            BigDecimal price = BigDecimal.valueOf(cartItem.getPrice());
+            BigDecimal itemTotal = price.multiply(BigDecimal.valueOf(cartItem.getQuantity()));
+
+            totalAmount = totalAmount.add(itemTotal);
+
+            OrderItem orderItem = OrderItem.builder()
+                    .order(order)
+                    .productId(cartItem.getProductId())
+                    .productName(cartItem.getProductName())
+                    .price(price)
+                    .quantity(cartItem.getQuantity())
+                    .totalPrice(itemTotal)
+                    .build();
+
+            orderItemRepository.save(orderItem);
+
+            inventoryService.reserveStock(
+                    cartItem.getProductId(),
+                    cartItem.getQuantity(),
+                    order.getId(),
+                    "CHECKOUT"
+            );
         }
 
-        orderItemRepository.saveAll(items);
+        order.setTotalAmount(totalAmount);
+        orderRepository.save(order);
 
-        cartItemRepository.deleteAll(cartItems);
+        cartService.clearCart(userId);
 
         return order;
     }
 
-    /* ========================
-       ENTITY → DTO
-    ======================== */
+    @Override
+    @Transactional
+    public UserOrder checkout(Long userId) {
+        return createOrderFromCart(userId);
+    }
+
+    @Override
+    @Transactional
+    public UserOrder checkout(Long userId, CheckoutRequest request) {
+        validateCheckoutRequest(request);
+        return createOrderFromCart(userId);
+    }
 
     @Override
     public OrderResponse toResponse(UserOrder order) {
-
         return OrderResponse.builder()
                 .id(order.getId())
                 .orderNumber(order.getOrderNumber())
                 .totalAmount(order.getTotalAmount())
                 .status(order.getStatus().name())
+                .paymentOrderId(order.getPaymentOrderId())
+                .paymentId(order.getPaymentId())
                 .createdAt(order.getCreatedAt())
                 .build();
     }
 
-    /* ========================
-       USER ORDERS
-    ======================== */
-
     @Override
     public Page<OrderResponse> getUserOrders(Long userId, Pageable pageable) {
-
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -172,7 +143,6 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OrderStatusResponse getOrderStatus(Long userId, Long orderId) {
-
         UserOrder order = getOrderById(orderId);
 
         if (!order.getUser().getId().equals(userId)) {
@@ -192,7 +162,6 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private void validateCheckoutRequest(CheckoutRequest request) {
-
         if (request == null) {
             return;
         }
@@ -215,5 +184,40 @@ public class OrderServiceImpl implements OrderService {
                 throw new RuntimeException("Invalid checkout quantity");
             }
         }
+    }
+
+    @Override
+    @Transactional
+    public UserOrder updateOrderStatus(Long orderId, OrderStatus status) {
+
+        UserOrder order = getOrderById(orderId);
+
+        OrderStatus current = order.getStatus();
+
+        // 🔥 STRICT FLOW CONTROL
+        if (current == OrderStatus.CREATED && status != OrderStatus.PAID && status != OrderStatus.CANCELLED) {
+            throw new RuntimeException("Invalid transition");
+        }
+
+        if (current == OrderStatus.PAID && status != OrderStatus.PROCESSING) {
+            throw new RuntimeException("Invalid transition");
+        }
+
+        if (current == OrderStatus.PROCESSING && status != OrderStatus.SHIPPED) {
+            throw new RuntimeException("Invalid transition");
+        }
+
+        if (current == OrderStatus.SHIPPED && status != OrderStatus.DELIVERED) {
+            throw new RuntimeException("Invalid transition");
+        }
+
+        // ✅ DELHIVERY TEST MODE (AUTO TRACKING)
+        if (status == OrderStatus.SHIPPED) {
+            order.setPaymentReference("TEST_TRACK_" + order.getId()); // temporary tracking
+        }
+
+        order.setStatus(status);
+
+        return orderRepository.save(order);
     }
 }

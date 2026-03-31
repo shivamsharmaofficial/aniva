@@ -92,6 +92,9 @@ public class PaymentService {
             options.put("notes", new JSONObject().put("internalOrderId", orderId));
 
             Order razorOrder = razorpayClient.orders.create(options);
+            String razorpayOrderId = razorOrder.get("id");
+            order.setPaymentOrderId(razorpayOrderId);
+            orderRepository.save(order);
             return razorOrder.toString();
         } catch (Exception ex) {
             throw new IllegalStateException("Razorpay order creation failed", ex);
@@ -240,7 +243,7 @@ public class PaymentService {
 
         order.setPaymentId(paymentId);
         order.setPaymentStatus(PaymentStatus.PAID);
-        order.setStatus(OrderStatus.CONFIRMED);
+        order.setStatus(OrderStatus.PAID);
 
         List<OrderItem> items = orderItemRepository.findByOrderId(order.getId());
 
@@ -324,7 +327,7 @@ public class PaymentService {
 
     private boolean isPaid(UserOrder order) {
         return order.getPaymentStatus() == PaymentStatus.PAID
-                || order.getStatus() == OrderStatus.CONFIRMED;
+                || order.getStatus() == OrderStatus.PAID;
     }
     private Long resolveWebhookOrderId(JSONObject paymentEntity) {
 

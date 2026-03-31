@@ -4,6 +4,7 @@ import com.aniva.core.response.ApiResponse;
 import com.aniva.modules.order.dto.OrderItemResponse;
 import com.aniva.modules.order.dto.OrderResponse;
 import com.aniva.modules.order.dto.UpdateOrderStatusRequest;
+import com.aniva.modules.order.enums.OrderStatus;
 import com.aniva.modules.order.service.AdminOrderService;
 import com.aniva.modules.order.service.OrderService;
 
@@ -23,6 +24,8 @@ public class AdminOrderController {
     private final AdminOrderService adminOrderService;
     private final OrderService orderService;
 
+    /* ================= GET ALL ================= */
+
     @GetMapping
     public ApiResponse<Page<OrderResponse>> getAllOrders(Pageable pageable) {
 
@@ -33,6 +36,8 @@ public class AdminOrderController {
         return ApiResponse.success("Orders fetched successfully", response);
     }
 
+    /* ================= GET SINGLE ================= */
+
     @GetMapping("/{orderId}")
     public ApiResponse<OrderResponse> getOrder(@PathVariable Long orderId) {
 
@@ -42,6 +47,8 @@ public class AdminOrderController {
         );
     }
 
+    /* ================= UPDATE STATUS (BODY) ================= */
+
     @PatchMapping("/{orderId}/status")
     public ApiResponse<OrderResponse> updateStatus(
             @PathVariable Long orderId,
@@ -49,9 +56,31 @@ public class AdminOrderController {
 
         return ApiResponse.success(
                 "Order status updated",
-                orderService.toResponse(adminOrderService.updateOrderStatus(orderId, request))
+                orderService.toResponse(
+                        adminOrderService.updateOrderStatus(orderId, request)
+                )
         );
     }
+
+    /* ================= UPDATE STATUS (QUERY PARAM - NEW) ================= */
+
+    @PutMapping("/{orderId}/status")
+    public ApiResponse<OrderResponse> updateOrderStatus(
+            @PathVariable Long orderId,
+            @RequestParam String status
+    ) {
+
+        OrderStatus newStatus = OrderStatus.valueOf(status.toUpperCase());
+
+        return ApiResponse.success(
+                "Order status updated",
+                orderService.toResponse(
+                        orderService.updateOrderStatus(orderId, newStatus)
+                )
+        );
+    }
+
+    /* ================= ORDER ITEMS ================= */
 
     @GetMapping("/{orderId}/items")
     public ApiResponse<java.util.List<OrderItemResponse>> getOrderItems(@PathVariable Long orderId) {

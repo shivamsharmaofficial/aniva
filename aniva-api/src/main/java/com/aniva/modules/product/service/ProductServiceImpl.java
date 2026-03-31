@@ -10,10 +10,6 @@ import com.aniva.modules.product.repository.CategoryRepository;
 import com.aniva.modules.product.repository.ProductRepository;
 import com.aniva.modules.product.specification.ProductSpecification;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -33,17 +29,12 @@ import java.util.Objects;
 @Transactional
 public class ProductServiceImpl implements ProductService {
 
-    private static final String PRODUCT_LIST_CACHE = "product-list";
-    private static final String PRODUCT_SINGLE_CACHE = "product-single";
-
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
-    private final CacheManager cacheManager;
 
     // CREATE PRODUCT
 
     @Override
-    @CacheEvict(cacheNames = PRODUCT_LIST_CACHE, allEntries = true)
     public ProductResponseDTO createProduct(CreateProductRequestDTO request) {
 
         validatePrice(request.getPrice(), request.getDiscountPrice());
@@ -78,13 +69,10 @@ public class ProductServiceImpl implements ProductService {
     // UPDATE PRODUCT
 
     @Override
-    @CacheEvict(cacheNames = PRODUCT_LIST_CACHE, allEntries = true)
     public ProductResponseDTO updateProduct(Long id, CreateProductRequestDTO request) {
 
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
-        String previousSlug = product.getSlug();
-
         validatePrice(request.getPrice(), request.getDiscountPrice());
 
         if (!product.getName().equals(request.getName())) {
@@ -114,16 +102,12 @@ public class ProductServiceImpl implements ProductService {
             handleImages(product, request);
         }
 
-        ProductResponseDTO response = ProductMapper.toResponse(product);
-        evictSingleProductCaches(previousSlug, response.getSlug());
-
-        return response;
+        return ProductMapper.toResponse(product);
     }
 
     // DELETE PRODUCT
 
     @Override
-    @CacheEvict(cacheNames = PRODUCT_LIST_CACHE, allEntries = true)
     public void deleteProduct(Long id) {
 
         Product product = productRepository.findById(id)
@@ -131,18 +115,12 @@ public class ProductServiceImpl implements ProductService {
 
         product.setIsDeleted(true);
         product.setIsActive(false);
-        evictSingleProductCache(product.getSlug());
     }
 
     // GET PRODUCT BY SLUG
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(
-            cacheNames = PRODUCT_SINGLE_CACHE,
-            key = "T(com.aniva.modules.product.service.ProductServiceImpl).buildSingleProductCacheKey(#slug)",
-            unless = "#result == null"
-    )
     public ProductResponseDTO getBySlug(String slug) {
 
         Product product = productRepository
@@ -164,7 +142,6 @@ public class ProductServiceImpl implements ProductService {
     // RESTORE PRODUCT
 
     @Override
-    @CacheEvict(cacheNames = PRODUCT_LIST_CACHE, allEntries = true)
     public void restoreProduct(Long id) {
 
         Product product = productRepository.findById(id)
@@ -172,18 +149,15 @@ public class ProductServiceImpl implements ProductService {
 
         product.setIsDeleted(false);
         product.setIsActive(true);
-        evictSingleProductCache(product.getSlug());
     }
 
     @Override
-    @CacheEvict(cacheNames = PRODUCT_LIST_CACHE, allEntries = true)
     public void toggleActive(Long id) {
 
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
         product.setIsActive(!product.getIsActive());
-        evictSingleProductCache(product.getSlug());
     }
 
     // FILTER PRODUCTS
@@ -217,10 +191,6 @@ public class ProductServiceImpl implements ProductService {
                 ),
                 pageable
         ).map(ProductMapper::toResponse);
-    }
-
-    public static String buildSingleProductCacheKey(String slug) {
-        return "product:v1|slug=" + normalizeText(slug);
     }
 
     // SORT MAPPING
@@ -309,29 +279,6 @@ public class ProductServiceImpl implements ProductService {
         }
 
         return slug;
-    }
-
-    private void evictSingleProductCaches(String... slugs) {
-
-        Cache cache = cacheManager.getCache(PRODUCT_SINGLE_CACHE);
-
-        if (cache == null) {
-            return;
-        }
-
-        for (String slug : slugs) {
-            if (slug != null && !slug.isBlank()) {
-                cache.evict(buildSingleProductCacheKey(slug));
-            }
-        }
-    }
-
-    private void evictSingleProductCache(String slug) {
-        evictSingleProductCaches(slug);
-    }
-
-    private static String normalizeText(String value) {
-        return value == null ? "" : value.trim().toLowerCase();
     }
 
     private List<String> normalizeCategorySlugs(List<String> categorySlugs) {

@@ -20,5 +20,7 @@ public class OrderResponse {
     private String orderNumber;
     private BigDecimal totalAmount;
     private String status;
+    private String paymentOrderId;
+    private String paymentId;
     private LocalDateTime createdAt;
 }

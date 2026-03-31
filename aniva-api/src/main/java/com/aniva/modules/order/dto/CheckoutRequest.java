@@ -9,5 +9,4 @@ public class CheckoutRequest {
     private List<OrderItemRequest> items;
 
     private String shippingAddressId;
-
 }

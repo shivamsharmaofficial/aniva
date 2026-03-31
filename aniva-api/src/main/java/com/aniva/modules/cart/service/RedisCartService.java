@@ -39,24 +39,24 @@ public class RedisCartService {
         this.redisEnabled = redisEnabled;
     }
 
-    public void addToCart(Long userId, Long productId, Integer quantity) {
-        AddToCartRequest request = new AddToCartRequest();
-        request.setProductId(productId);
-        request.setQuantity(quantity);
-
+    public void addToCart(Long userId, AddToCartRequest request) {
         if (!redisEnabled) {
             cartService.addToCart(userId, request);
             return;
         }
 
         try {
-            validateRedisRequest(productId, quantity);
-            Product product = productRepository.findById(productId)
+            validateRedisRequest(request.getProductId(), request.getQuantity());
+            Product product = productRepository.findById(request.getProductId())
                     .orElseThrow(() -> new RuntimeException("Product not found"));
-            validateAvailableStock(product, quantity);
+            validateAvailableStock(product, request.getQuantity());
 
             String key = buildCartKey(userId);
-            redisTemplate.opsForHash().increment(key, productId.toString(), quantity.longValue());
+            redisTemplate.opsForHash().increment(
+                    key,
+                    request.getProductId().toString(),
+                    request.getQuantity().longValue()
+            );
             redisTemplate.expire(key, CART_TTL);
         } catch (Exception ex) {
             ex.printStackTrace();

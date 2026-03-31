@@ -2,8 +2,8 @@ package com.aniva.modules.order.enums;
 
 public enum OrderStatus {
 
-    PENDING,
-    CONFIRMED,
+    CREATED,
+    PAID,
     PROCESSING,
     SHIPPED,
     DELIVERED,

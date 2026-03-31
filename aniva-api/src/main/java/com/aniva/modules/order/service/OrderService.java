@@ -5,6 +5,7 @@ import com.aniva.modules.order.dto.OrderResponse;
 import com.aniva.modules.order.dto.OrderStatusResponse;
 import com.aniva.modules.order.entity.OrderItem;
 import com.aniva.modules.order.entity.UserOrder;
+import com.aniva.modules.order.enums.OrderStatus;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -12,6 +13,8 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 public interface OrderService {
+
+    UserOrder createOrderFromCart(Long userId);
 
     UserOrder checkout(Long userId);
 
@@ -27,4 +30,6 @@ public interface OrderService {
 
     OrderStatusResponse getOrderStatus(Long userId, Long orderId);
 
+    // ✅ NEW METHOD
+    UserOrder updateOrderStatus(Long orderId, OrderStatus status);
 }

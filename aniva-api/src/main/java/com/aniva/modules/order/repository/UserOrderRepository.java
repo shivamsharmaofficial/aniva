@@ -17,7 +17,7 @@ public interface UserOrderRepository extends JpaRepository<UserOrder, Long> {
 
     @Query("""
     SELECT o FROM UserOrder o
-    WHERE o.status = 'PENDING'
+    WHERE o.status = 'CREATED'
     AND o.createdAt < :time
     """)
     List<UserOrder> findPendingOrdersOlderThan(LocalDateTime time);

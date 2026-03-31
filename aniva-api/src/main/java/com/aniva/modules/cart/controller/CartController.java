@@ -4,7 +4,7 @@ import com.aniva.core.response.ApiResponse;
 import com.aniva.core.security.CustomUserDetails;
 import com.aniva.modules.cart.dto.AddToCartRequest;
 import com.aniva.modules.cart.dto.CartItemResponse;
-import com.aniva.modules.cart.service.RedisCartService;
+import com.aniva.modules.cart.service.CartService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -20,7 +20,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CartController {
 
-    private final RedisCartService redisCartService;
+    private final CartService cartService;
 
     /* ================= GET CART ================= */
 
@@ -45,7 +45,7 @@ public class CartController {
 
         return ApiResponse.success(
                 "Cart fetched successfully",
-                redisCartService.getCart(userDetails.getUserId())
+                cartService.getCart(userDetails.getUserId())
         );
     }
 
@@ -69,11 +69,7 @@ public class CartController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Admin cannot add items to cart");
         }
 
-        redisCartService.addToCart(
-                userDetails.getUserId(),
-                request.getProductId(),
-                request.getQuantity()
-        );
+        cartService.addToCart(userDetails.getUserId(), request);
 
         return ApiResponse.success(
                 "Product added to cart",
@@ -93,7 +89,7 @@ public class CartController {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated");
         }
 
-        redisCartService.removeItem(userDetails.getUserId(), productId);
+        cartService.removeProduct(userDetails.getUserId(), productId);
 
         return ApiResponse.success(
                 "Item removed from cart",

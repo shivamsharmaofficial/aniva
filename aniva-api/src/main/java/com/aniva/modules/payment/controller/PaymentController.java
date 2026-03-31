@@ -76,27 +76,27 @@ public class PaymentController {
 
     @PostMapping("/verify")
     public ApiResponse<OrderResponse> verifyPayment(
-            @RequestBody PaymentVerifyRequest request
-    ) {
+                @RequestBody PaymentVerifyRequest request
+        ) {
 
         try {
-            paymentService.verifyRazorpaySignature(
-                    request.getRazorpayOrderId(),
-                    request.getPaymentId(),
-                    request.getSignature()
-            );
+                paymentService.verifyRazorpaySignature(
+                        request.getRazorpayOrderId(),
+                        request.getRazorpayPaymentId(),
+                        request.getRazorpaySignature()
+                );
 
-            return ApiResponse.success(
-                    "Payment verified successfully",
-                    orderService.toResponse(
-                            paymentService.confirmPayment(
-                                    request.getOrderId(),
-                                    request.getPaymentId()
-                            )
-                    )
-            );
+                return ApiResponse.success(
+                        "Payment verified successfully",
+                        orderService.toResponse(
+                                paymentService.confirmPayment(
+                                        request.getOrderId(),
+                                        request.getRazorpayPaymentId()
+                                )
+                        )
+                );
         } catch (Exception ex) {
-            return ApiResponse.failure("Invalid payment");
+                return ApiResponse.failure("Invalid payment");
         }
     }
 
