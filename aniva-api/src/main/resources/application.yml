@@ -29,7 +29,7 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: update
-    show-sql: false   # 🔥 IMPORTANT (disable in production)
+    show-sql: false
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     properties:
       hibernate:
@@ -62,11 +62,6 @@ jwt:
   secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRATION:86400000}
 
-server:
-  port: ${PORT:8080}
-  tomcat:
-    connection-timeout: 20s
-
 app:
   redis:
-    enabled: false
+    enabled: false   # 🔥 TEMP DISABLE (VERY IMPORTANT)

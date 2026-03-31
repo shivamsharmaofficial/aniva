@@ -16,9 +16,13 @@ import org.springframework.cache.interceptor.CacheErrorHandler;
 import org.springframework.cache.interceptor.SimpleCacheErrorHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
 
 import org.springframework.data.redis.cache.*;
+import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
+import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 
 import org.springframework.data.redis.serializer.*;
@@ -32,6 +36,24 @@ public class RedisConfig {
     private static final Duration PRODUCT_LIST_TTL = Duration.ofMinutes(10);
     private static final Duration PRODUCT_SINGLE_TTL = Duration.ofMinutes(5);
     private static final Duration CATEGORY_TTL = Duration.ofMinutes(30);
+
+   @Bean
+   public RedisConnectionFactory redisConnectionFactory(RedisProperties redisProperties) {
+
+        RedisStandaloneConfiguration config = new RedisStandaloneConfiguration();
+        config.setHostName(redisProperties.getHost());
+        config.setPort(redisProperties.getPort());
+
+        if (redisProperties.getPassword() != null) {
+                config.setPassword(redisProperties.getPassword());
+        }
+
+        LettuceClientConfiguration clientConfig = LettuceClientConfiguration.builder()
+                .useSsl() // ✅ REQUIRED FOR UPSTASH
+                .build(); // ❌ removed commandTimeout
+
+        return new LettuceConnectionFactory(config, clientConfig);
+   }
 
     @Bean
     public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
