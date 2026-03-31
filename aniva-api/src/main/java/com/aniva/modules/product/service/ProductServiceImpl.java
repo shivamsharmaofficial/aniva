@@ -16,7 +16,6 @@ import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -208,10 +207,7 @@ public class ProductServiceImpl implements ProductService {
             int size) {
 
         List<String> safeCategorySlugs = normalizeCategorySlugs(categorySlugs);
-
-        Pageable pageable = buildPageable(sort, direction, page, size);
-
-        ProductListCacheValue cachedPage = selfProvider.getObject().getCachedProducts(
+        return selfProvider.getObject().getCachedProducts(
                 safeCategorySlugs,
                 minPrice,
                 maxPrice,
@@ -223,8 +219,6 @@ public class ProductServiceImpl implements ProductService {
                 page,
                 size
         );
-
-        return new PageImpl<>(cachedPage.content(), pageable, cachedPage.totalElements());
     }
 
     @Transactional(readOnly = true)
@@ -233,9 +227,9 @@ public class ProductServiceImpl implements ProductService {
             key = "T(com.aniva.modules.product.service.ProductServiceImpl).buildProductsCacheKey(" +
                     "#categorySlugs, #minPrice, #maxPrice, #search, #status, #includeDeleted, " +
                     "#sort, #direction, #page, #size)",
-            unless = "#result == null || #result.content == null || #result.content.isEmpty()"
+            unless = "#result == null || #result.getContent() == null || #result.getContent().isEmpty()"
     )
-    public ProductListCacheValue getCachedProducts(
+    public Page<ProductResponseDTO> getCachedProducts(
             List<String> categorySlugs,
             BigDecimal minPrice,
             BigDecimal maxPrice,
@@ -263,10 +257,7 @@ public class ProductServiceImpl implements ProductService {
                 pageable
         ).map(ProductMapper::toResponse);
 
-        return new ProductListCacheValue(
-                productsPage.getContent(),
-                productsPage.getTotalElements()
-        );
+        return productsPage;
     }
 
     public static String buildProductsCacheKey(
@@ -445,9 +436,4 @@ public class ProductServiceImpl implements ProductService {
                 .toList();
     }
 
-    public record ProductListCacheValue(
-            List<ProductResponseDTO> content,
-            long totalElements
-    ) {
-    }
 }
