@@ -74,7 +74,6 @@ public class SecurityConfig {
                             "/api/products/**",
                             "/api/categories/**",
                             "/api/payments/mode",
-                            "/api/cart/**",
                             "/api/webhook/razorpay"
                     ).permitAll()
 

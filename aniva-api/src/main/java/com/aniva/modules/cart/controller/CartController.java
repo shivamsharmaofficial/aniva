@@ -29,17 +29,18 @@ public class CartController {
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
 
-            boolean isAdmin = userDetails.getAuthorities()
-            .stream()
-            .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-
-        if (isAdmin) {
-            throw new RuntimeException("Admin cannot access cart");
+        // ✅ Null check FIRST
+        if (userDetails == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated");
         }
 
-        System.out.println("UserDetails: " + userDetails);
-        if (userDetails == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        // ✅ Role check
+        boolean isAdmin = userDetails.getAuthorities()
+                .stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (isAdmin) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Admin cannot access cart");
         }
 
         return ApiResponse.success(
@@ -57,15 +58,15 @@ public class CartController {
     ) {
 
         if (userDetails == null) {
-            throw new RuntimeException("User not authenticated");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated");
         }
 
         boolean isAdmin = userDetails.getAuthorities()
-            .stream()
-            .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+                .stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
         if (isAdmin) {
-            throw new RuntimeException("Admin cannot add items to cart");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Admin cannot add items to cart");
         }
 
         redisCartService.addToCart(
@@ -89,7 +90,7 @@ public class CartController {
     ) {
 
         if (userDetails == null) {
-            throw new RuntimeException("User not authenticated");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated");
         }
 
         redisCartService.removeItem(userDetails.getUserId(), productId);
