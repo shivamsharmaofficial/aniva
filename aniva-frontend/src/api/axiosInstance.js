@@ -11,9 +11,14 @@ import {
 ============================== */
 
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL, // should be http://localhost:8080/api
+  baseURL: import.meta.env.VITE_API_URL,
   withCredentials: false,
 });
+
+const PUBLIC_API_PREFIXES = ["/products", "/categories"];
+
+const isPublicApiRequest = (url = "") =>
+  PUBLIC_API_PREFIXES.some((prefix) => url.startsWith(prefix));
 
 /* ==============================
    REFRESH CONTROL VARIABLES
@@ -76,9 +81,20 @@ const refreshAccessToken = async () => {
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = getAccessToken();
+    const requestUrl = config.url || "";
+    const shouldSkipAuth = isPublicApiRequest(requestUrl);
 
-    if (token) {
+    console.debug(
+      "[axios] token",
+      token ? "present" : "missing",
+      "url:",
+      requestUrl
+    );
+
+    if (!shouldSkipAuth && token) {
       config.headers.Authorization = `Bearer ${token}`;
+    } else if (config.headers?.Authorization) {
+      delete config.headers.Authorization;
     }
 
     return config;
@@ -103,11 +119,7 @@ axiosInstance.interceptors.response.use(
 
     const status = error.response.status;
 
-    /* ==============================
-       HANDLE 401 (TOKEN EXPIRED)
-    ============================== */
-
-    if (status === 401 && !originalRequest._retry) {
+    if (status === 401 && !originalRequest._retry && !isPublicApiRequest(originalRequest?.url || "")) {
       const refreshToken = getRefreshToken();
 
       if (!refreshToken) {
@@ -148,18 +160,10 @@ axiosInstance.interceptors.response.use(
       }
     }
 
-    /* ==============================
-       HANDLE 403
-    ============================== */
-
     if (status === 403) {
       console.warn("Forbidden request:", originalRequest.url);
       return Promise.reject(error);
     }
-
-    /* ==============================
-       DEBUG CHECKOUT FAILURES
-    ============================== */
 
     if (status === 500) {
       console.error("Server Error:", error.response.data);

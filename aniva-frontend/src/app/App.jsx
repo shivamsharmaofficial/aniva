@@ -1,10 +1,11 @@
 import { useEffect } from "react";
 import { BrowserRouter } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import Router from "./router";
 import { ToastProvider } from "@/components/ui/ToastProvider";
 import ErrorBoundary from "@/components/common/ErrorBoundary";
 import axiosInstance from "@/api/axiosInstance";
+import { queryClient } from "@/lib/queryClient";
 
 import {
   clearSession,
@@ -13,15 +14,6 @@ import {
 } from "@/features/auth/utils/authService";
 
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
 
 function App() {
   const accessToken = useAuthStore((s) => s.accessToken);
