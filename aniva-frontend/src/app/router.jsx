@@ -35,6 +35,12 @@ const CheckoutPage = lazy(() =>
   import("@/features/checkout/pages/Checkout.jsx")
 );
 
+/* ================= ORDER SUCCESS ================= */
+
+const OrderSuccess = lazy(() =>
+  import("@/features/order/pages/OrderSuccess.jsx")
+);
+
 /* ================= AUTH ================= */
 
 const LoginPage = lazy(() =>
@@ -86,11 +92,8 @@ const EditProduct = lazy(() =>
 );
 
 function Router() {
-
   return (
-
     <Suspense fallback={<PageLoader />}>
-
       <Routes>
 
         {/* ================= STORE FRONT ================= */}
@@ -98,18 +101,34 @@ function Router() {
         <Route element={<MainLayout />}>
 
           <Route path="/" element={<Home />} />
-
           <Route path="/candles" element={<Candles />} />
-
           <Route path="/bestsellers" element={<BestSellers />} />
-
           <Route path="/gifts" element={<GiftSets />} />
-
           <Route path="/about" element={<About />} />
-
           <Route path="/cart" element={<Cart />} />
-
           <Route path="/product/:slug" element={<ProductDetails />} />
+
+          {/* ================= CHECKOUT FLOW ================= */}
+
+          <Route
+            path="/checkout"
+            element={
+              <ProtectedRoute>
+                <CheckoutPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/checkout/order-success"
+            element={
+              <ProtectedRoute>
+                <OrderSuccess />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* ================= ORDERS ================= */}
 
           <Route
             path="/orders"
@@ -128,6 +147,8 @@ function Router() {
               </ProtectedRoute>
             }
           />
+
+          {/* ================= USER ================= */}
 
           <Route
             path="/addresses"
@@ -165,6 +186,8 @@ function Router() {
             }
           />
 
+          {/* ================= AUTH ================= */}
+
           <Route
             path="/account/login"
             element={
@@ -179,20 +202,11 @@ function Router() {
             element={<Navigate to="/account/login" replace />}
           />
 
-          <Route
-            path="/checkout"
-            element={
-              <ProtectedRoute>
-                <CheckoutPage />
-              </ProtectedRoute>
-            }
-          />
-
           <Route path="/403" element={<Forbidden />} />
 
         </Route>
 
-        {/* ================= ADMIN SYSTEM ================= */}
+        {/* ================= ADMIN ================= */}
 
         <Route
           path="/admin/*"
@@ -202,23 +216,15 @@ function Router() {
             </RoleBasedRoute>
           }
         >
-
           <Route path="dashboard" element={<AdminDashboard />} />
-
           <Route path="products" element={<ManageProducts />} />
-
           <Route path="products/create" element={<CreateProduct />} />
-
           <Route path="products/edit/:id" element={<EditProduct />} />
-
         </Route>
 
       </Routes>
-
     </Suspense>
-
   );
-
 }
 
 export default Router;

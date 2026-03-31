@@ -25,7 +25,6 @@ function ProductDetails() {
 
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(null);
-  const [selectedVariant, setSelectedVariant] = useState(null);
   const [showLightbox, setShowLightbox] = useState(false);
   const [wishlist, setWishlist] = useState(false);
   const [rating, setRating] = useState(5);
@@ -58,17 +57,14 @@ function ProductDetails() {
 
   /* ================= DERIVED DATA ================= */
 
-  const variants = product?.variants || [];
   const images = product?.images || [];
-
-  const activeVariant = selectedVariant || variants[0];
 
   const basePrice = product?.price ?? 0;
   const discountPrice = product?.discountPrice;
 
-  const price = activeVariant?.variantPrice ?? discountPrice ?? basePrice;
+  const price = discountPrice ?? basePrice;
 
-  const inStock = activeVariant ? activeVariant.stockQuantity > 0 : true;
+  const inStock = (product?.totalStock ?? 1) > 0;
 
   const mainImage =
     selectedImage ||
@@ -84,14 +80,9 @@ function ProductDetails() {
       return;
     }
 
-    if (!activeVariant?.id) {
-      showToast("Please select a variant");
-      return;
-    }
-
     addToCartMutation.mutate(
       {
-        variantId: activeVariant.id,
+        productId: product.id,
         quantity,
       },
       {
@@ -118,10 +109,9 @@ function ProductDetails() {
         buyNowItem: {
           productId: product.id,
           name: product.name,
-          price: price,
+          price,
           quantity,
           image: mainImage,
-          variant: activeVariant || null,
         },
       },
     });
@@ -149,11 +139,10 @@ function ProductDetails() {
       label: "Specifications",
       content: (
         <div className="tab-specs">
-          {variants.map((v) => (
-            <div key={v.id}>
-              {v.variantName} â€” ₹{v.variantPrice}
-            </div>
-          ))}
+          {product.brand && <div>Brand: {product.brand}</div>}
+          {product.fragranceType && <div>Fragrance: {product.fragranceType}</div>}
+          {product.burnTime && <div>Burn Time: {product.burnTime}</div>}
+          {product.weightGrams && <div>Weight: {product.weightGrams}g</div>}
         </div>
       ),
     },
@@ -207,8 +196,6 @@ function ProductDetails() {
       </div>
 
       <div className="product-details-grid">
-        {/* IMAGE SECTION */}
-
         <div className="product-image-section">
           <div className="image-wrapper">
             <img
@@ -234,8 +221,6 @@ function ProductDetails() {
           </div>
         </div>
 
-        {/* PRODUCT INFO */}
-
         <div className="product-info-section">
           <h2>{product.name}</h2>
 
@@ -251,23 +236,6 @@ function ProductDetails() {
           >
             {wishlist ? "♥ In Wishlist" : "♡ Wishlist"}
           </button>
-
-          {variants.length > 0 && (
-            <select
-              value={activeVariant?.id}
-              onChange={(e) =>
-                setSelectedVariant(
-                  variants.find((v) => v.id == e.target.value)
-                )
-              }
-            >
-              {variants.map((v) => (
-                <option key={v.id} value={v.id}>
-                  {v.variantName}
-                </option>
-              ))}
-            </select>
-          )}
 
           <div className="quantity-selector">
             <button onClick={() => setQuantity((q) => Math.max(1, q - 1))}>

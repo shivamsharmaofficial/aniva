@@ -3,7 +3,7 @@ import { useToast } from "@/components/ui/useToast";
 import {
   fetchAllOrders,
   updateOrderStatus,
-} from "@/services/adminOrderService";
+} from "@/features/admin/api/adminOrderApi";
 
 const formatStatus = (status) => {
   if (!status) return "Unknown";
@@ -134,9 +134,19 @@ function AdminOrders() {
                   }
                   disabled={isUpdating}
                 >
-                  <option value="PROCESSING">PROCESSING</option>
-                  <option value="SHIPPED">SHIPPED</option>
-                  <option value="DELIVERED">DELIVERED</option>
+
+                  {order.status === "PAID" && (
+                    <option value="PROCESSING">PROCESSING</option>
+                  )}
+
+                  {order.status === "PROCESSING" && (
+                    <option value="SHIPPED">SHIPPED</option>
+                  )}
+
+                  {order.status === "SHIPPED" && (
+                    <option value="DELIVERED">DELIVERED</option>
+                  )}
+
                 </select>
               </article>
             );

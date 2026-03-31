@@ -5,7 +5,7 @@ export const fetchCart = async () => {
 };
 
 export const addToCartApi = async (payload) => {
-  return await apiPost("/cart/items", payload);
+  return await apiPost("/cart/add", payload);
 };
 
 export const removeFromCartApi = async (itemId) => {

@@ -2,12 +2,9 @@ import { useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCart } from "@/features/cart/hooks/useCart";
-import {
-  getPaymentMode,
-  confirmPayment,
-} from "@/features/payment/api/paymentApi";
 import { useToast } from "@/components/ui/useToast";
 import { createOrder } from "@/services/orderService";
+import axios from "axios";
 
 import OrderSummary from "../components/OrderSummary";
 import PaymentMethod from "../components/PaymentMethod";
@@ -15,12 +12,26 @@ import AddressForm from "@/features/address/components/AddressForm";
 
 import "../styles/checkout.css";
 
+// ✅ Razorpay Loader
+const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+
+    document.body.appendChild(script);
+  });
+};
+
 const Checkout = () => {
   const location = useLocation();
   const { data, isLoading, isError } = useCart();
   const items = Array.isArray(data) ? data : [];
   const buyNowItem = location.state?.buyNowItem;
   const finalItems = buyNowItem ? [buyNowItem] : items;
+
   const queryClient = useQueryClient();
   const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -30,6 +41,27 @@ const Checkout = () => {
       sum + (Number(item?.price) || 0) * (Number(item?.quantity) || 0),
     0
   );
+
+  // ✅ VERIFY PAYMENT FUNCTION
+  const verifyPayment = async (response, orderId) => {
+    try {
+      await axios.post("/api/payments/verify", {
+        orderId: orderId,
+        razorpayOrderId: response.razorpay_order_id,
+        razorpayPaymentId: response.razorpay_payment_id,
+        razorpaySignature: response.razorpay_signature,
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
+
+      showToast("Payment successful 🎉");
+
+      window.location.href = "/order-success";
+    } catch (err) {
+      console.error("Verification failed", err);
+      showToast("Payment verification failed ❌");
+    }
+  };
 
   const handleCheckout = async () => {
     if (loading) return;
@@ -42,47 +74,57 @@ const Checkout = () => {
     setLoading(true);
 
     try {
-      const order = await createOrder();
-
-      const mode = await getPaymentMode();
-
-      if (mode === "MOCK") {
-        await confirmPayment(order.id, "MOCK_PAYMENT");
-
-        queryClient.invalidateQueries({ queryKey: ["cart"] });
-
-        showToast("Payment successful 🎉");
-
-        window.location.href = "/orders";
+      // ✅ Load Razorpay SDK
+      const loaded = await loadRazorpayScript();
+      if (!loaded) {
+        showToast("Razorpay SDK failed to load ❌");
         return;
       }
 
+      // ✅ Call backend
+      const res = await createOrder();
+
+      const { order, paymentData } = res || {};
+
+      if (!order?.id || !paymentData) {
+        throw new Error("Invalid checkout response");
+      }
+
+      // ✅ Parse payment data
+      const payment = JSON.parse(paymentData);
+
+      // ✅ Razorpay options
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY,
-        amount: order.totalAmount * 100,
-        currency: "INR",
+        amount: payment.amount,
+        currency: payment.currency,
         name: "ANIVA",
         description: "Order Payment",
+        order_id: payment.id,
+
         handler: async function (response) {
-          await confirmPayment(
-            order.id,
-            response.razorpay_payment_id
-          );
+          await verifyPayment(response, order.id);
+        },
 
-          queryClient.invalidateQueries({ queryKey: ["cart"] });
+        prefill: {
+          name: order.userName || "Customer",
+          email: order.userEmail || "",
+        },
 
-          showToast("Payment successful 🎉");
-
-          window.location.href = "/orders";
+        theme: {
+          color: "#3399cc",
         },
       };
 
-      if (!window.Razorpay) {
-        showToast("Payment system not loaded ❌");
-        return;
-      }
-
       const rzp = new window.Razorpay(options);
+
+      // ✅ ERROR HANDLING
+      rzp.on("payment.failed", function (response) {
+        console.error("Payment Failed:", response.error);
+
+        showToast("Payment failed ❌ Try again");
+      });
+
       rzp.open();
     } catch (err) {
       console.error("Checkout failed", err);
@@ -97,11 +139,7 @@ const Checkout = () => {
   }
 
   if (isError && !buyNowItem) {
-    return (
-      <div className="checkout-page">
-        Unable to load checkout right now.
-      </div>
-    );
+    return <div className="checkout-page">Unable to load checkout right now.</div>;
   }
 
   if (finalItems.length === 0) {
@@ -114,9 +152,7 @@ const Checkout = () => {
 
   return (
     <section className="checkout-page">
-      <h2 className="checkout-title">
-        Checkout
-      </h2>
+      <h2 className="checkout-title">Checkout</h2>
 
       <div className="checkout-layout">
         <div className="checkout-left">
@@ -124,12 +160,9 @@ const Checkout = () => {
           <PaymentMethod />
 
           <div className="checkout-items">
-            {(finalItems || []).map((item) => (
+            {finalItems.map((item) => (
               <div key={item.id || item.productId} className="checkout-item">
-                <img
-                  src={item.imageUrl || item.image}
-                  alt={item.name}
-                />
+                <img src={item.imageUrl || item.image} alt={item.name} />
 
                 <div className="checkout-item-info">
                   <h4>{item.name}</h4>

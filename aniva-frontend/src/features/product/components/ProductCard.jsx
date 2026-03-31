@@ -30,16 +30,16 @@ function ProductCard({ product }) {
       return;
     }
 
-    const variantId = product?.variants?.[0]?.id;
+    const productId = product?.id;
 
-    if (!variantId) {
-      showToast("Variant unavailable");
+    if (!productId) {
+      showToast("Product unavailable");
       return;
     }
 
     addToCartMutation.mutate(
       {
-        variantId,
+        productId,
         quantity: 1,
       },
       {
