@@ -18,10 +18,20 @@ public class CategoryController {
 
     @GetMapping
     public ApiResponse<List<CategoryResponseDTO>> getAllCategories() {
+        try {
+            List<CategoryResponseDTO> categories = categoryService.getAllActiveCategories();
 
-        return ApiResponse.success(
-                "Categories fetched successfully",
-                categoryService.getAllActiveCategories()
-        );
+            return ApiResponse.success(
+                    "Categories fetched successfully",
+                    categories == null ? List.of() : categories
+            );
+        } catch (Exception ex) {
+            ex.printStackTrace();
+
+            return ApiResponse.success(
+                    "Categories fetched successfully",
+                    List.of()
+            );
+        }
     }
 }

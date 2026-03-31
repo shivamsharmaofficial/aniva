@@ -17,6 +17,8 @@ import java.util.Map;
 @Slf4j
 public class GlobalExceptionHandler {
 
+    /* ================= RUNTIME EXCEPTION ================= */
+
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiResponse<Object>> handleRuntimeException(RuntimeException ex) {
 
@@ -27,6 +29,8 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST
         );
     }
+
+    /* ================= VALIDATION EXCEPTION ================= */
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Object>> handleValidationException(MethodArgumentNotValidException ex) {
@@ -48,8 +52,12 @@ public class GlobalExceptionHandler {
         );
     }
 
+    /* ================= ACCESS DENIED ================= */
+
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ApiResponse<Object>> handleAccessDeniedException() {
+    public ResponseEntity<ApiResponse<Object>> handleAccessDeniedException(AccessDeniedException ex) {
+
+        log.warn("Access Denied: {}", ex.getMessage());
 
         return new ResponseEntity<>(
                 ApiResponse.failure("Access Denied"),
@@ -57,8 +65,10 @@ public class GlobalExceptionHandler {
         );
     }
 
+    /* ================= GENERIC EXCEPTION ================= */
+
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResponse<Object>> handleGenericException(Exception ex) {
+    public ResponseEntity<ApiResponse<Object>> handleException(Exception ex) {
 
         log.error("Unhandled Exception", ex);
 

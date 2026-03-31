@@ -5,6 +5,7 @@ import com.aniva.modules.cart.dto.CartItemResponse;
 import com.aniva.modules.cart.dto.RedisCartItem;
 import com.aniva.modules.product.entity.Product;
 import com.aniva.modules.product.repository.ProductRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -25,21 +26,28 @@ public class RedisCartService {
     private final RedisTemplate<String, Object> redisTemplate;
     private final ProductRepository productRepository;
     private final CartService cartService;
+    private final boolean redisEnabled;
 
     public RedisCartService(
             RedisTemplate<String, Object> redisTemplate,
             ProductRepository productRepository,
-            CartService cartService) {
+            CartService cartService,
+            @Value("${app.redis.enabled:false}") boolean redisEnabled) {
         this.redisTemplate = redisTemplate;
         this.productRepository = productRepository;
         this.cartService = cartService;
+        this.redisEnabled = redisEnabled;
     }
 
     public void addToCart(Long userId, Long productId, Integer quantity) {
-
         AddToCartRequest request = new AddToCartRequest();
         request.setProductId(productId);
         request.setQuantity(quantity);
+
+        if (!redisEnabled) {
+            cartService.addToCart(userId, request);
+            return;
+        }
 
         try {
             validateRedisRequest(productId, quantity);
@@ -51,34 +59,49 @@ public class RedisCartService {
             redisTemplate.opsForHash().increment(key, productId.toString(), quantity.longValue());
             redisTemplate.expire(key, CART_TTL);
         } catch (Exception ex) {
+            ex.printStackTrace();
             cartService.addToCart(userId, request);
         }
     }
 
     public List<CartItemResponse> getCart(Long userId) {
+        if (!redisEnabled) {
+            return safeCartFallback(userId);
+        }
 
         try {
             return getRedisCart(userId);
         } catch (Exception ex) {
-            return cartService.getCart(userId);
+            ex.printStackTrace();
+            return safeCartFallback(userId);
         }
     }
 
     public void removeItem(Long userId, Long productId) {
+        if (!redisEnabled) {
+            cartService.removeProduct(userId, productId);
+            return;
+        }
 
         try {
             redisTemplate.opsForHash().delete(buildCartKey(userId), productId.toString());
             redisTemplate.expire(buildCartKey(userId), CART_TTL);
         } catch (Exception ex) {
+            ex.printStackTrace();
             cartService.removeProduct(userId, productId);
         }
     }
 
     public void clearCart(Long userId) {
+        if (!redisEnabled) {
+            cartService.clearCart(userId);
+            return;
+        }
 
         try {
             redisTemplate.delete(buildCartKey(userId));
         } catch (Exception ex) {
+            ex.printStackTrace();
             cartService.clearCart(userId);
         }
     }
@@ -89,7 +112,7 @@ public class RedisCartService {
         Map<Object, Object> entries = hashOperations.entries(key);
 
         if (entries == null || entries.isEmpty()) {
-            List<CartItemResponse> fallbackCart = cartService.getCart(userId);
+            List<CartItemResponse> fallbackCart = safeCartFallback(userId);
 
             if (fallbackCart.isEmpty()) {
                 return List.of();
@@ -176,7 +199,6 @@ public class RedisCartService {
     }
 
     private void validateAvailableStock(Product product, Integer quantity) {
-
         int totalStock = product.getTotalStock() == null ? 0 : product.getTotalStock();
         int reservedStock = product.getReservedStock() == null ? 0 : product.getReservedStock();
         int availableStock = totalStock - reservedStock;
@@ -194,5 +216,15 @@ public class RedisCartService {
             return number.intValue();
         }
         return Integer.parseInt(value.toString());
+    }
+
+    private List<CartItemResponse> safeCartFallback(Long userId) {
+        try {
+            List<CartItemResponse> cart = cartService.getCart(userId);
+            return cart == null ? List.of() : cart;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return List.of();
+        }
     }
 }

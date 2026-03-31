@@ -66,3 +66,7 @@ server:
   port: ${PORT:8080}
   tomcat:
     connection-timeout: 20s
+
+app:
+  redis:
+    enabled: false
