@@ -10,7 +10,6 @@ import com.aniva.modules.product.repository.CategoryRepository;
 import com.aniva.modules.product.repository.ProductRepository;
 import com.aniva.modules.product.specification.ProductSpecification;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
@@ -28,8 +27,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.StringJoiner;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -41,7 +38,6 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
-    private final ObjectProvider<ProductServiceImpl> selfProvider;
     private final CacheManager cacheManager;
 
     // CREATE PRODUCT
@@ -207,45 +203,10 @@ public class ProductServiceImpl implements ProductService {
             int size) {
 
         List<String> safeCategorySlugs = normalizeCategorySlugs(categorySlugs);
-        return selfProvider.getObject().getCachedProducts(
-                safeCategorySlugs,
-                minPrice,
-                maxPrice,
-                search,
-                status,
-                includeDeleted,
-                sort,
-                direction,
-                page,
-                size
-        );
-    }
-
-    @Transactional(readOnly = true)
-    @Cacheable(
-            cacheNames = PRODUCT_LIST_CACHE,
-            key = "T(com.aniva.modules.product.service.ProductServiceImpl).buildProductsCacheKey(" +
-                    "#categorySlugs, #minPrice, #maxPrice, #search, #status, #includeDeleted, " +
-                    "#sort, #direction, #page, #size)",
-            unless = "#result == null || #result.getContent() == null || #result.getContent().isEmpty()"
-    )
-    public Page<ProductResponseDTO> getCachedProducts(
-            List<String> categorySlugs,
-            BigDecimal minPrice,
-            BigDecimal maxPrice,
-            String search,
-            String status,
-            Boolean includeDeleted,
-            String sort,
-            String direction,
-            int page,
-            int size) {
-
-        List<String> safeCategorySlugs = normalizeCategorySlugs(categorySlugs);
 
         Pageable pageable = buildPageable(sort, direction, page, size);
 
-        Page<ProductResponseDTO> productsPage = productRepository.findAll(
+        return productRepository.findAll(
                 ProductSpecification.filter(
                         safeCategorySlugs,
                         minPrice,
@@ -256,45 +217,6 @@ public class ProductServiceImpl implements ProductService {
                 ),
                 pageable
         ).map(ProductMapper::toResponse);
-
-        return productsPage;
-    }
-
-    public static String buildProductsCacheKey(
-            List<String> categorySlugs,
-            BigDecimal minPrice,
-            BigDecimal maxPrice,
-            String search,
-            String status,
-            Boolean includeDeleted,
-            String sort,
-            String direction,
-            int page,
-            int size) {
-
-        List<String> normalizedCategories = categorySlugs == null
-                ? List.of()
-                : categorySlugs.stream()
-                .filter(Objects::nonNull)
-                .map(String::trim)
-                .map(String::toLowerCase)
-                .filter(value -> !value.isEmpty())
-                .sorted()
-                .toList();
-
-        StringJoiner joiner = new StringJoiner("|", "products:v2|", "");
-        joiner.add("page=" + Math.max(page, 0));
-        joiner.add("size=" + Math.max(size, 1));
-        joiner.add("categories=" + String.join(",", normalizedCategories));
-        joiner.add("minPrice=" + normalizeDecimal(minPrice));
-        joiner.add("maxPrice=" + normalizeDecimal(maxPrice));
-        joiner.add("search=" + normalizeText(search));
-        joiner.add("status=" + normalizeText(status));
-        joiner.add("includeDeleted=" + Boolean.TRUE.equals(includeDeleted));
-        joiner.add("sort=" + normalizeSortField(sort));
-        joiner.add("direction=" + normalizeDirection(direction));
-
-        return joiner.toString();
     }
 
     public static String buildSingleProductCacheKey(String slug) {
@@ -408,20 +330,8 @@ public class ProductServiceImpl implements ProductService {
         evictSingleProductCaches(slug);
     }
 
-    private static String normalizeDecimal(BigDecimal value) {
-        return value == null ? "" : value.stripTrailingZeros().toPlainString();
-    }
-
     private static String normalizeText(String value) {
         return value == null ? "" : value.trim().toLowerCase();
-    }
-
-    private static String normalizeSortField(String sort) {
-        return sort == null ? "createdat" : sort.trim().toLowerCase();
-    }
-
-    private static String normalizeDirection(String direction) {
-        return "asc".equalsIgnoreCase(direction) ? "asc" : "desc";
     }
 
     private List<String> normalizeCategorySlugs(List<String> categorySlugs) {
