@@ -318,6 +318,12 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private void validatePassword(User user, String rawPassword) {
+
+        System.out.println("RAW PASSWORD: " + rawPassword);
+        System.out.println("RAW PASSWORD LENGTH: " + rawPassword.length());
+        if (rawPassword.length() > 72) {
+    throw new RuntimeException("Invalid password input");
+}
         UserAuthProvider provider =
                 providerRepository.findByUser_IdAndProvider(user.getId(), "LOCAL")
                         .orElseThrow(() -> new RuntimeException("Invalid credentials"));
@@ -325,14 +331,6 @@ public class AuthServiceImpl implements AuthService {
         if (!passwordEncoder.matches(rawPassword, provider.getPasswordHash())) {
             throw new RuntimeException("Invalid credentials");
         }
-
-        if (rawPassword.length() < 200) {
-        System.out.println("RAW PASSWORD VALUE: " + rawPassword);
-        
-        System.out.println("RAW PASSWORD LENGTH: " + rawPassword.length());
-        }
-        else{
-        System.out.println("RAW PASSWORD LENGTH : password is huge  ");}
     }
 
     private void updateLastLogin(User user) {
