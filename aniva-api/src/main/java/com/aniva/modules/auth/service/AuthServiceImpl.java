@@ -296,14 +296,12 @@ public class AuthServiceImpl implements AuthService {
     private void createLocalAuthProvider(User user, String password) {
         // 🔥 DEBUG LOG (VERY IMPORTANT)
         System.out.println("==== DEBUG START ====");
-        System.out.println("PASSWORD BEFORE ENCODE: " + password);
-        System.out.println("PASSWORD LENGTH: " + password.length());
         System.out.println("==== DEBUG END ====");
 
         UserAuthProvider provider = UserAuthProvider.builder()
                 .user(user)
                 .provider("LOCAL")
-                .passwordHash(passwordEncoder.encode(password))
+                .passwordHash("TEST_HASH")
                 .build();
 
         providerRepository.save(provider);
