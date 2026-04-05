@@ -3,8 +3,6 @@ package com.aniva.modules.auth.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
-
 import com.aniva.core.audit.BaseEntity;
 
 @Entity

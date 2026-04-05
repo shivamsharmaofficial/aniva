@@ -28,4 +28,14 @@ public class RefreshToken extends BaseEntity {
 
     @Column(nullable = false)
     private Boolean revoked = false;
+
+    @Column(name = "token_id", nullable = false, unique = true)
+    private String tokenId;
+
+    // 🔥 DEVICE TRACKING (NEW FIELDS)
+    @Column(name = "device_info")
+    private String deviceInfo;
+
+    @Column(name = "ip_address")
+    private String ipAddress;
 }

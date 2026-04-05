@@ -10,6 +10,7 @@ import com.aniva.modules.auth.dto.LoginRequest;
 import com.aniva.modules.auth.dto.RegisterRequest;
 import com.aniva.modules.auth.dto.UserProfileResponse;
 import com.aniva.modules.auth.service.AuthService;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.time.LocalDateTime;
 
@@ -44,13 +45,18 @@ public class AuthController {
     }
 
     // 🔐 LOGIN
-    @PostMapping("/login")
-    public ResponseEntity<ApiResponse<AuthResponse>> login(
-            @RequestBody LoginRequest request) {
+   @PostMapping("/login")
+   public ResponseEntity<ApiResponse<AuthResponse>> login(
+                @RequestBody LoginRequest request,
+                HttpServletRequest httpRequest) { // 🔥 ADDED
 
         AuthResponse authResponse = authService.login(
                 request.getIdentifier(),
-                request.getPassword()
+                request.getPassword(),
+
+                // 🔥 CAPTURE DEVICE + IP
+                httpRequest.getHeader("User-Agent"),
+                httpRequest.getRemoteAddr()
         );
 
         ApiResponse<AuthResponse> response = ApiResponse.<AuthResponse>builder()
@@ -61,7 +67,7 @@ public class AuthController {
                 .build();
 
         return ResponseEntity.ok(response);
-    }
+   }
 
     // 🔐 CURRENT USER PROFILE
     @GetMapping("/me")
@@ -97,4 +103,16 @@ public class AuthController {
 
     return ResponseEntity.ok(response);
     }
+
+        //logout
+        @PostMapping("/logout")
+        public ResponseEntity<ApiResponse<String>> logout(
+                @RequestParam String refreshToken) {
+
+        authService.logout(refreshToken);
+
+        return ResponseEntity.ok(
+                ApiResponse.success("Logged out successfully", null)
+        );
+        }
 }

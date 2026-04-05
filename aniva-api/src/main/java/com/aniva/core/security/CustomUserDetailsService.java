@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.aniva.modules.auth.entity.User;
 import com.aniva.modules.auth.repository.UserRepository;
+import org.springframework.cache.annotation.Cacheable;
 
 import java.util.List;
 
@@ -20,9 +21,8 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String email)
             throws UsernameNotFoundException {
 
-        User user = userRepository.findByEmailWithRoles(email)
-                .orElseThrow(() ->
-                        new UsernameNotFoundException("User not found"));
+        // 🔥 USE REDIS CACHE INSTEAD OF DB
+        User user = loadUserByEmail(email);
 
         List<SimpleGrantedAuthority> authorities =
                 user.getRoles()
@@ -37,4 +37,17 @@ public class CustomUserDetailsService implements UserDetailsService {
                 authorities
         );
     }
+
+        // ===============================
+        // 🔥 REDIS CACHE - USER SESSION
+        // ===============================
+        @Cacheable(value = "user-session", key = "#email", unless = "#result == null")
+        public User loadUserByEmail(String email) {
+
+        // 🔥 First time DB hit, next time Redis ⚡
+        return userRepository.findByEmailWithRoles(email)
+                .orElseThrow(() ->
+                        new UsernameNotFoundException("User not found"));
+        }
+
 }

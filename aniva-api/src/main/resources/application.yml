@@ -64,4 +64,4 @@ jwt:
 
 app:
   redis:
-    enabled: false   # 🔥 TEMP DISABLE (VERY IMPORTANT)
+    enabled: true   # 🔥 TEMP DISABLE (VERY IMPORTANT)

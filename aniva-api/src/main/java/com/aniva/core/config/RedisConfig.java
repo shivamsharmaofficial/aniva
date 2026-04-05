@@ -64,9 +64,22 @@ public class RedisConfig {
         RedisCacheConfiguration defaultConfig = buildCacheConfiguration(serializer, DEFAULT_TTL);
 
         Map<String, RedisCacheConfiguration> cacheConfigurations = new HashMap<>();
+
+        // =========================
+        // 🔥 PRODUCT CACHE (EXISTING)
+        // =========================
         cacheConfigurations.put("product-list", buildCacheConfiguration(serializer, PRODUCT_LIST_TTL));
         cacheConfigurations.put("product-single", buildCacheConfiguration(serializer, PRODUCT_SINGLE_TTL));
         cacheConfigurations.put("categories", buildCacheConfiguration(serializer, CATEGORY_TTL));
+
+        // =========================
+        // 🔥 AUTH CACHE (NEW - IMPORTANT)
+        // =========================
+        cacheConfigurations.put("user-profile",
+                buildCacheConfiguration(serializer, Duration.ofMinutes(10))); // 🔥 profile cache
+
+        cacheConfigurations.put("user-session",
+                buildCacheConfiguration(serializer, Duration.ofMinutes(5)));  // 🔥 session cache
 
         return RedisCacheManager.builder(connectionFactory)
                 .cacheDefaults(defaultConfig)
@@ -154,4 +167,6 @@ public class RedisConfig {
 
         return objectMapper;
     }
+
+    
 }

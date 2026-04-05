@@ -21,6 +21,7 @@ public class JwtUtil {
     public JwtUtil(
             @Value("${jwt.secret}") String secret,
             @Value("${jwt.expiration:86400000}") long expirationTime) {
+
         if (secret == null || secret.isBlank()) {
             throw new IllegalStateException("JWT secret must be configured");
         }
@@ -39,10 +40,9 @@ public class JwtUtil {
 
     /*
      ===============================
-     GENERATE TOKEN
+     GENERATE ACCESS TOKEN
      ===============================
     */
-
     public String generateToken(String email, List<String> roles) {
 
         return Jwts.builder()
@@ -58,20 +58,55 @@ public class JwtUtil {
 
     /*
      ===============================
-     EXTRACT EMAIL
+     🔥 GENERATE REFRESH TOKEN
+     ===============================
+     - Contains ONLY userId (no roles, no email)
+     - Longer expiry (7 days)
+     - Used ONLY for refreshing access token
+    */
+    public String generateRefreshToken(Long userId, String tokenId) {
+        return Jwts.builder()
+                .setSubject(String.valueOf(userId))
+                .claim("tokenId", tokenId) // 🔥 IMPORTANT
+                .setIssuedAt(new Date())
+                .setExpiration(
+                    new Date(System.currentTimeMillis() + 7 * 24 * 60 * 60 * 1000)
+                )
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    /*
+     ===============================
+     🔥 EXTRACT USER ID FROM REFRESH TOKEN
+     ===============================
+     - Used during refresh flow
+     - Helps fetch all tokens of user
+    */
+    public Long extractUserIdFromRefreshToken(String token) {
+        return Long.parseLong(
+                extractAllClaims(token).getSubject()
+        );
+    }
+
+    public String extractTokenId(String token) {
+        return extractAllClaims(token).get("tokenId", String.class);
+    }
+
+    /*
+     ===============================
+     EXTRACT EMAIL (ACCESS TOKEN)
      ===============================
     */
-
     public String extractEmail(String token) {
         return extractAllClaims(token).getSubject();
     }
 
     /*
      ===============================
-     EXTRACT ROLES
+     EXTRACT ROLES (ACCESS TOKEN)
      ===============================
     */
-
     public List<String> extractRoles(String token) {
         return extractAllClaims(token).get("roles", List.class);
     }
@@ -81,7 +116,6 @@ public class JwtUtil {
      VALIDATE TOKEN
      ===============================
     */
-
     public boolean validateToken(String token) {
 
         try {
@@ -98,7 +132,6 @@ public class JwtUtil {
      TOKEN EXPIRY CHECK
      ===============================
     */
-
     private boolean isTokenExpired(String token) {
 
         return extractAllClaims(token)
@@ -108,10 +141,9 @@ public class JwtUtil {
 
     /*
      ===============================
-     PARSE CLAIMS
+     PARSE CLAIMS (COMMON METHOD)
      ===============================
     */
-
     private Claims extractAllClaims(String token) {
 
         return Jwts.parserBuilder()

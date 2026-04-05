@@ -29,19 +29,45 @@ public class RateLimitingFilter extends OncePerRequestFilter {
 
     private final ObjectMapper objectMapper;
 
+    // 🔥 Stores bucket per (IP + endpoint)
     private final Map<String, Bucket> bucketsByIp = new ConcurrentHashMap<>();
 
-    private Bucket createBucket() {
+    /*
+     ===============================
+     CREATE BUCKET BASED ON PATH
+     ===============================
+     - Different rate limits for different endpoints
+    */
+    private Bucket createBucket(String path) {
+
+        // 🔐 STRICT LIMIT FOR LOGIN (prevent brute force)
+        if (path.startsWith("/api/auth/login")) {
+            return Bucket.builder()
+                    .addLimit(
+                            Bandwidth.classic(
+                                    5, // max 5 requests
+                                    Refill.greedy(5, Duration.ofMinutes(1)) // per minute
+                            )
+                    )
+                    .build();
+        }
+
+        // 🔓 NORMAL LIMIT FOR OTHER APIs
         return Bucket.builder()
                 .addLimit(
                         Bandwidth.classic(
-                                100,
+                                100, // max 100 requests
                                 Refill.greedy(100, Duration.ofMinutes(1))
                         )
                 )
                 .build();
     }
 
+    /*
+     ===============================
+     FILTER ONLY IMPORTANT APIs
+     ===============================
+    */
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
 
@@ -52,6 +78,11 @@ public class RateLimitingFilter extends OncePerRequestFilter {
                  path.startsWith(PAYMENTS_PATH_PREFIX));
     }
 
+    /*
+     ===============================
+     MAIN RATE LIMIT LOGIC
+     ===============================
+    */
     @Override
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,
@@ -61,7 +92,21 @@ public class RateLimitingFilter extends OncePerRequestFilter {
 
         String clientIp = resolveClientIp(request);
 
-        Bucket bucket = bucketsByIp.computeIfAbsent(clientIp, key -> createBucket());
+        // 🔥 NEW: Get request path
+        String path = request.getServletPath();
+
+        // 🔥 CRITICAL FIX:
+        // Combine IP + path so each endpoint has separate rate limit
+        // Example:
+        // 192.168.1.1:/api/auth/login
+        // 192.168.1.1:/api/orders/create
+        String key = clientIp + ":" + path;
+
+        // 🔥 FIXED: Create bucket per (IP + endpoint)
+        Bucket bucket = bucketsByIp.computeIfAbsent(
+                key,
+                k -> createBucket(path)
+        );
 
         ConsumptionProbe probe = bucket.tryConsumeAndReturnRemaining(1);
 
@@ -89,6 +134,12 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         objectMapper.writeValue(response.getWriter(), error);
     }
 
+    /*
+     ===============================
+     EXTRACT CLIENT IP
+     ===============================
+     - Supports proxies (NGINX, Cloudflare, etc.)
+    */
     private String resolveClientIp(HttpServletRequest request) {
 
         String forwarded = request.getHeader("X-Forwarded-For");

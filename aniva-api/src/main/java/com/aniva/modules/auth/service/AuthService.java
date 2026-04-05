@@ -12,9 +12,13 @@ public interface AuthService {
                           String password);
 
     AuthResponse login(String identifier,
-                       String password);
+                       String password,
+                       String deviceInfo,   // 🔥 NEW
+                       String ipAddress); 
 
     UserProfileResponse getCurrentUser();
 
     AuthResponse refreshToken(String refreshToken);
+
+    void logout(String refreshToken);
 }
