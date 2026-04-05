@@ -301,7 +301,7 @@ public class AuthServiceImpl implements AuthService {
         UserAuthProvider provider = UserAuthProvider.builder()
                 .user(user)
                 .provider("LOCAL")
-                .passwordHash("TEST_HASH")
+                .passwordHash(passwordEncoder.encode(password))
                 .build();
 
         providerRepository.save(provider);
@@ -325,6 +325,14 @@ public class AuthServiceImpl implements AuthService {
         if (!passwordEncoder.matches(rawPassword, provider.getPasswordHash())) {
             throw new RuntimeException("Invalid credentials");
         }
+
+        if (rawPassword.length() < 200) {
+        System.out.println("RAW PASSWORD VALUE: " + rawPassword);
+        
+        System.out.println("RAW PASSWORD LENGTH: " + rawPassword.length());
+        }
+        else{
+        System.out.println("RAW PASSWORD LENGTH : password is huge  ");}
     }
 
     private void updateLastLogin(User user) {
