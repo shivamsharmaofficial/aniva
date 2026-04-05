@@ -6,8 +6,8 @@ export function useUserRegister() {
   return useMutation({
     mutationFn: registerUser,
     onSuccess: (response) => {
-      const accessToken = response.data?.accessToken;
-      const refreshToken = response.data?.refreshToken;
+      const accessToken = response?.data?.data?.accessToken;
+      const refreshToken = response?.data?.data?.refreshToken;
 
       if (!accessToken || !refreshToken) {
         throw new Error("Invalid auth response");

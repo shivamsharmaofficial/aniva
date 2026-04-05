@@ -11,3 +11,7 @@ export const registerUser = async (data) => {
   const response = await axiosInstance.post("/auth/register", data);
   return response.data;
 };
+
+export const trackEvent = async (event) => {
+  await axiosInstance.post("/events", event);
+};
